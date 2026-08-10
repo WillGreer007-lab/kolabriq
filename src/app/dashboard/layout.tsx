@@ -86,7 +86,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* Mobile Header */}
         <header className="md:hidden h-20 bg-white border-b border-[var(--border-subtle)] flex items-center justify-between px-6 shrink-0">
           <Link href="/" className="font-heading font-extrabold text-xl tracking-tight text-[var(--foreground)]">

@@ -63,6 +63,10 @@ export default function CampaignMarketplace() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
   const handleApply = async (campaignId: string) => {
     setApplyingId(campaignId);
     try {
