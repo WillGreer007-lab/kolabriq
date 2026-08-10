@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Megaphone, Wallet, Settings, LogOut, Menu, UserCircle, MessageCircle, ListOrdered } from "lucide-react";
+import { LayoutDashboard, Megaphone, Wallet, Settings, LogOut, Menu, UserCircle, MessageCircle, ListOrdered, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardLayout({
@@ -17,28 +17,41 @@ export default function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // We determine the active base route to highlight the correct nav links
+  const isAdmin = pathname.includes("/admin");
   const isCreator = pathname.includes("/creator");
-  const baseRoute = isCreator ? "/dashboard/creator" : "/dashboard/business";
+  
+  let baseRoute = "/dashboard/business";
+  if (isAdmin) baseRoute = "/dashboard/admin";
+  else if (isCreator) baseRoute = "/dashboard/creator";
 
-  const navLinks = isCreator 
-    ? [
-        { name: "Overview", href: baseRoute, icon: LayoutDashboard },
-        { name: "Marketplace", href: `${baseRoute}/campaigns/marketplace`, icon: UserCircle },
-        { name: "My Campaigns", href: `${baseRoute}/campaigns`, icon: Megaphone },
-        { name: "Messages", href: `${baseRoute}/messages`, icon: MessageCircle },
-        { name: "Earnings", href: `${baseRoute}/earnings`, icon: Wallet },
-        { name: "Profile", href: `${baseRoute}/profile`, icon: UserCircle },
-        { name: "Settings", href: `${baseRoute}/settings`, icon: Settings },
-      ]
-    : [
-        { name: "Overview", href: baseRoute, icon: LayoutDashboard },
-        { name: "Discovery", href: `${baseRoute}/discovery`, icon: UserCircle },
-        { name: "Campaigns", href: `${baseRoute}/campaigns`, icon: Megaphone },
-        { name: "Messages", href: `${baseRoute}/messages`, icon: MessageCircle },
-        { name: "Applications", href: `${baseRoute}/applications`, icon: ListOrdered },
-        { name: "Profile", href: `${baseRoute}/profile`, icon: UserCircle },
-        { name: "Settings", href: `${baseRoute}/settings`, icon: Settings },
-      ];
+  let navLinks: any[] = [];
+  
+  if (isAdmin) {
+    navLinks = [
+      { name: "Platform Users", href: baseRoute, icon: Users },
+      { name: "Settings", href: `${baseRoute}/settings`, icon: Settings },
+    ];
+  } else if (isCreator) {
+    navLinks = [
+      { name: "Overview", href: baseRoute, icon: LayoutDashboard },
+      { name: "Marketplace", href: `${baseRoute}/campaigns/marketplace`, icon: UserCircle },
+      { name: "My Campaigns", href: `${baseRoute}/campaigns`, icon: Megaphone },
+      { name: "Messages", href: `${baseRoute}/messages`, icon: MessageCircle },
+      { name: "Earnings", href: `${baseRoute}/earnings`, icon: Wallet },
+      { name: "Profile", href: `${baseRoute}/profile`, icon: UserCircle },
+      { name: "Settings", href: `${baseRoute}/settings`, icon: Settings },
+    ];
+  } else {
+    navLinks = [
+      { name: "Overview", href: baseRoute, icon: LayoutDashboard },
+      { name: "Discovery", href: `${baseRoute}/discovery`, icon: UserCircle },
+      { name: "Campaigns", href: `${baseRoute}/campaigns`, icon: Megaphone },
+      { name: "Messages", href: `${baseRoute}/messages`, icon: MessageCircle },
+      { name: "Applications", href: `${baseRoute}/applications`, icon: ListOrdered },
+      { name: "Profile", href: `${baseRoute}/profile`, icon: UserCircle },
+      { name: "Settings", href: `${baseRoute}/settings`, icon: Settings },
+    ];
+  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

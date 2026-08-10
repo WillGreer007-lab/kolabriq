@@ -10,6 +10,11 @@ export default async function DashboardIndex() {
   }
 
   // Redirect based on role in user_metadata
+  const isAdmin = user.user_metadata?.is_admin;
+  if (isAdmin) {
+    redirect("/dashboard/admin");
+  }
+
   const role = user.user_metadata?.role;
 
   if (role === 'business') {
