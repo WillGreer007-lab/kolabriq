@@ -3,6 +3,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 // Tell fluent-ffmpeg where the binary is
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
@@ -21,10 +22,75 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-console.log("🎬 Kolabriq Video Processing Worker Started...");
+console.log("🎬 Kolabriq Real Video Processing Worker Started...");
 
-// Simple polling mechanism to check for pending videos in a hypothetical 'video_jobs' table
-// Note: You would need to create a `video_jobs` table in Supabase to track uploads.
+async function processVideo(job: any) {
+  const { file_path } = job;
+  console.log(`\n⏳ Processing job ${job.id} for file ${file_path}...`);
+  
+  await supabase.from('video_jobs').update({ status: 'processing' }).eq('id', job.id);
+
+  const tempDir = os.tmpdir();
+  const inputFilePath = path.join(tempDir, `input_${job.id}.mp4`);
+  const outputFilePath = path.join(tempDir, `output_${job.id}.mp4`);
+
+  try {
+    // 1. Download from Supabase
+    console.log("⬇️ Downloading video from Supabase...");
+    const { data: fileData, error: downloadError } = await supabase.storage.from('videos').download(file_path);
+    if (downloadError) throw new Error(`Download failed: ${downloadError.message}`);
+    
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+    fs.writeFileSync(inputFilePath, buffer);
+    console.log("✅ Download complete.");
+
+    // 2. Compress via FFmpeg
+    console.log("⚙️ Compressing video via FFmpeg (this may take a moment)...");
+    await new Promise((resolve, reject) => {
+      ffmpeg(inputFilePath)
+        .outputOptions([
+          '-c:v libx264',
+          '-crf 28', // Good compression ratio
+          '-preset fast', // Faster encoding
+          '-c:a aac',
+          '-b:a 128k'
+        ])
+        .save(outputFilePath)
+        .on('end', () => resolve(true))
+        .on('error', (err) => reject(err));
+    });
+    console.log("✅ Compression complete.");
+
+    // 3. Upload back to Supabase
+    console.log("⬆️ Uploading compressed video back to Supabase...");
+    const compressedBuffer = fs.readFileSync(outputFilePath);
+    const newFilePath = file_path.replace('.mp4', '_compressed.mp4');
+    
+    const { error: uploadError } = await supabase.storage.from('videos').upload(newFilePath, compressedBuffer, {
+      contentType: 'video/mp4',
+      upsert: true
+    });
+    
+    if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+    console.log("✅ Upload complete.");
+
+    // 4. Clean up and complete
+    fs.unlinkSync(inputFilePath);
+    fs.unlinkSync(outputFilePath);
+
+    await supabase.from('video_jobs').update({ status: 'completed' }).eq('id', job.id);
+    console.log(`🎉 Job ${job.id} fully completed!`);
+
+  } catch (error: any) {
+    console.error(`❌ Error processing job ${job.id}:`, error.message);
+    await supabase.from('video_jobs').update({ status: 'failed' }).eq('id', job.id);
+    
+    // Clean up temp files if they exist
+    if (fs.existsSync(inputFilePath)) fs.unlinkSync(inputFilePath);
+    if (fs.existsSync(outputFilePath)) fs.unlinkSync(outputFilePath);
+  }
+}
+
 async function pollQueue() {
   try {
     const { data: jobs, error } = await supabase
@@ -39,28 +105,12 @@ async function pollQueue() {
     }
 
     if (jobs && jobs.length > 0) {
-      const job = jobs[0];
-      console.log(`Processing job ${job.id} for file ${job.file_path}...`);
-      
-      // Update status to processing
-      await supabase.from('video_jobs').update({ status: 'processing' }).eq('id', job.id);
-
-      // In a real scenario, you would:
-      // 1. Download the video from Supabase Storage to a local temp folder
-      // 2. Run ffmpeg to compress and extract a thumbnail
-      // 3. Upload the processed files back to Supabase Storage
-      // 4. Update the job status to 'completed'
-
-      // Simulate processing time
-      setTimeout(async () => {
-        console.log(`✅ Finished processing job ${job.id}`);
-        await supabase.from('video_jobs').update({ status: 'completed' }).eq('id', job.id);
-        pollQueue(); // Check for next job immediately
-      }, 3000);
-      return;
+      await processVideo(jobs[0]);
+      // Check for next job immediately after finishing
+      return pollQueue();
     }
   } catch (e) {
-    // Ignore errors if table doesn't exist yet
+    // Ignore schema errors if table doesn't exist yet
   }
 
   // Poll again in 5 seconds if no jobs
