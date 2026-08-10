@@ -22,9 +22,9 @@ export default async function DashboardIndex() {
   } else if (role === 'creator') {
     redirect("/dashboard/creator");
   } else {
-    // Fallback if role is not set, try to fetch from profiles table
+    // Fallback if role is not set, try to fetch from users table
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('users')
       .select('role')
       .eq('id', user.id)
       .single();

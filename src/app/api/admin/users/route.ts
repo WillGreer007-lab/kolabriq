@@ -23,9 +23,9 @@ export async function GET() {
       throw authError;
     }
 
-    // 3. Fetch profiles to get roles
+    // 3. Fetch public.users to get roles
     const { data: profiles, error: profileError } = await adminClient
-      .from('profiles')
+      .from('users')
       .select('id, full_name, role');
       
     if (profileError) {
