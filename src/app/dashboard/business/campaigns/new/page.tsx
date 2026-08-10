@@ -225,7 +225,7 @@ export default function NewCampaignPage() {
                 />
               </div>
             )}
-            
+            {(formData.compensation_model === 'performance' || formData.compensation_model === 'hybrid') && (
               <div className="fade-in-up">
                 <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Commission Rate (%)</label>
                 <input

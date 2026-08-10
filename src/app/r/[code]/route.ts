@@ -21,7 +21,7 @@ export async function GET(
     // Find the link
     const { data: link, error } = await supabaseAdmin
       .from("campaign_links")
-      .select("id, campaign_id, campaigns(target_url)")
+      .select("id, campaign_id, creator_id, campaigns(target_url, cookie_window_days)")
       .eq("short_code", code)
       .single();
 
@@ -36,8 +36,9 @@ export async function GET(
 
     supabaseAdmin.from("clicks").insert([
       {
-        link_id: link.id,
-        ip_hash: ipHash, // In production, hash this for GDPR compliance
+        campaign_id: link.campaign_id,
+        creator_id: link.creator_id,
+        ip_address: ipHash, // In production, hash this for GDPR compliance
         user_agent: userAgent
       }
     ]).then(({ error }) => {
@@ -54,13 +55,18 @@ export async function GET(
     // Create a response that redirects
     const response = NextResponse.redirect(finalDestination);
 
-    // Set first-party cookie for 30 days
+    // Determine cookie duration based on campaign settings (default 30 days)
+    const cookieWindowDays = Array.isArray(link.campaigns)
+        ? (link.campaigns[0]?.cookie_window_days || 30)
+        : ((link.campaigns as any)?.cookie_window_days || 30);
+
+    // Set first-party cookie for the specified duration
     const cookieStore = await cookies();
     response.cookies.set('kolabriq_ref', code, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 30 * 24 * 60 * 60 // 30 days
+      maxAge: cookieWindowDays * 24 * 60 * 60
     });
 
     return response;
