@@ -26,8 +26,8 @@ export default function ApplicationsModal({ campaign, onClose }: { campaign: any
       const creatorIds = [...new Set(data.map(app => app.creator_id))];
       if (creatorIds.length > 0) {
         const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, role")
+          .from("users")
+          .select("id, raw_user_meta_data")
           .in("id", creatorIds);
         
         if (profiles) {
@@ -37,7 +37,7 @@ export default function ApplicationsModal({ campaign, onClose }: { campaign: any
 
       const appsWithProfiles = data.map(app => ({
         ...app,
-        creator: { raw_user_meta_data: { full_name: profilesMap[app.creator_id]?.full_name } }
+        creator: { raw_user_meta_data: { full_name: profilesMap[app.creator_id]?.raw_user_meta_data?.full_name } }
       }));
       setApplications(appsWithProfiles);
     }
@@ -52,6 +52,24 @@ export default function ApplicationsModal({ campaign, onClose }: { campaign: any
         .from("campaign_applications")
         .update({ status: 'accepted' })
         .eq("id", app.id);
+
+      // Create chat conversation
+      const { data: conv } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("campaign_id", campaign.id)
+        .eq("creator_id", app.creator_id)
+        .single();
+
+      if (!conv) {
+        await supabase
+          .from("conversations")
+          .insert({
+            campaign_id: campaign.id,
+            business_id: campaign.business_id,
+            creator_id: app.creator_id
+          });
+      }
 
       // Then trigger checkout
       const amount = campaign.compensation_model === 'fixed' || campaign.compensation_model === 'hybrid' 

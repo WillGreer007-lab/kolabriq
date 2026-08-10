@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Briefcase, Loader2, Megaphone, Plus, Link as LinkIcon, Copy, Sparkles, X, Upload } from "lucide-react";
 import Link from "next/link";
+import { CldUploadWidget } from 'next-cloudinary';
 
 export default function CreatorCampaignsPage() {
   const supabase = createClient();
@@ -66,35 +67,25 @@ export default function CreatorCampaignsPage() {
     alert("Tracking link copied to clipboard!");
   };
 
-  const handleUploadVideo = async (e: React.ChangeEvent<HTMLInputElement>, campaignId: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleCloudinarySuccess = async (resultInfo: any, campaignId: string) => {
     setUploading(campaignId);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not logged in");
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${campaignId}_${user.id}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `videos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
+      // The secure_url points to the video on Cloudinary
+      const videoUrl = resultInfo.secure_url;
 
       await supabase
         .from('campaign_applications')
-        .update({ deliverable_url: fileName })
+        .update({ deliverable_url: videoUrl })
         .eq('campaign_id', campaignId)
         .eq('creator_id', user.id);
 
-      alert("Video uploaded successfully! Cloudinary is optimizing it now.");
+      alert("Video processed and uploaded successfully via Cloudinary!");
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Failed to upload video");
+      alert(err.message || "Failed to save video URL");
     } finally {
       setUploading(null);
     }
@@ -262,20 +253,44 @@ export default function CreatorCampaignsPage() {
                             </button>
 
                             <div className="relative w-full">
-                              <input 
-                                type="file" 
-                                accept="video/*"
-                                onChange={(e) => handleUploadVideo(e, campaign.id)}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                disabled={uploading === campaign.id}
-                              />
-                              <button 
-                                disabled={uploading === campaign.id}
-                                className="btn-secondary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center border-[var(--border-subtle)] hover:bg-[#10B981]/10 hover:text-[#10B981] hover:border-[#10B981]/30 transition-colors"
+                              <CldUploadWidget 
+                                uploadPreset="ml_default"
+                                onSuccess={(result: any) => handleCloudinarySuccess(result.info, campaign.id)}
+                                options={{
+                                  sources: ['local', 'google_drive', 'dropbox'],
+                                  multiple: false,
+                                  maxFiles: 1,
+                                  clientAllowedFormats: ['video'],
+                                  styles: {
+                                      palette: {
+                                          window: "#FFFFFF",
+                                          windowBorder: "#10B981",
+                                          tabIcon: "#10B981",
+                                          menuIcons: "#10B981",
+                                          textDark: "#000000",
+                                          textLight: "#FFFFFF",
+                                          link: "#10B981",
+                                          action: "#10B981",
+                                          inactiveTabIcon: "#0E2F5A",
+                                          error: "#F44235",
+                                          inProgress: "#10B981",
+                                          complete: "#10B981",
+                                          sourceBg: "#E4EBF1"
+                                      }
+                                  }
+                                }}
                               >
-                                {uploading === campaign.id ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
-                                {uploading === campaign.id ? "Uploading..." : "Upload Video"}
-                              </button>
+                                {({ open }) => (
+                                  <button 
+                                    onClick={() => open()}
+                                    disabled={uploading === campaign.id}
+                                    className="btn-secondary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center border-[var(--border-subtle)] hover:bg-[#10B981]/10 hover:text-[#10B981] hover:border-[#10B981]/30 transition-colors"
+                                  >
+                                    {uploading === campaign.id ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                                    {uploading === campaign.id ? "Processing..." : "Cloud Editor & Upload"}
+                                  </button>
+                                )}
+                              </CldUploadWidget>
                             </div>
                           </div>
                         )}

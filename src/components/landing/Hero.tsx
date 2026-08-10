@@ -13,8 +13,8 @@ export default function Hero() {
         {/* Massive Pixis Typography */}
         <div className="text-center fade-in-up w-full flex flex-col items-center">
           <h1 className="text-[3.5rem] leading-tight sm:text-[4.5rem] md:text-[5.5rem] lg:text-[6.5rem] font-heading font-extrabold text-[var(--foreground)] tracking-tight mx-auto max-w-[1100px] text-center">
-            The future of advertisement<br />
-            for <span className="relative inline-block">
+            Advertisement for<br />
+            <span className="relative inline-block">
               creators & brands
               <svg className="absolute -bottom-2 left-0 w-full h-4 text-[#10B981]" viewBox="0 0 100 10" preserveAspectRatio="none">
                 <path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />

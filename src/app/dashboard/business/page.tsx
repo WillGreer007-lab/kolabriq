@@ -28,11 +28,10 @@ export default async function BusinessDashboard() {
     // Total Spend (from ledger)
     const { data: ledgers } = await supabase
       .from("ledger_entries")
-      .select("amount")
-      .in("campaign_id", campaignIds)
-      .eq("type", "payout");
+      .select("amount_total")
+      .in("campaign_id", campaignIds);
     
-    totalSpend = ledgers?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
+    totalSpend = ledgers?.reduce((sum, item) => sum + Number(item.amount_total), 0) || 0;
 
     // Active Creators (accepted applications)
     const { count: creatorsCount } = await supabase
@@ -42,29 +41,19 @@ export default async function BusinessDashboard() {
       .eq("status", "accepted");
     activeCreators = creatorsCount || 0;
 
-    // Fetch links to get clicks and conversions
-    const { data: links } = await supabase
-      .from("campaign_links")
-      .select("id")
+    // Clicks
+    const { count: clicksCount } = await supabase
+      .from("clicks")
+      .select("*", { count: 'exact', head: true })
       .in("campaign_id", campaignIds);
+    totalClicks = clicksCount || 0;
 
-    if (links && links.length > 0) {
-      const linkIds = links.map(l => l.id);
-
-      // Clicks
-      const { count: clicksCount } = await supabase
-        .from("clicks")
-        .select("*", { count: 'exact', head: true })
-        .in("link_id", linkIds);
-      totalClicks = clicksCount || 0;
-
-      // Conversions
-      const { count: convsCount } = await supabase
-        .from("conversions")
-        .select("*", { count: 'exact', head: true })
-        .in("link_id", linkIds);
-      totalConversions = convsCount || 0;
-    }
+    // Conversions
+    const { count: convsCount } = await supabase
+      .from("conversions")
+      .select("*", { count: 'exact', head: true })
+      .in("campaign_id", campaignIds);
+    totalConversions = convsCount || 0;
   }
 
   const cpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : "0.00";

@@ -50,10 +50,12 @@ export async function POST(request: Request) {
     const { data: conversion, error: conversionError } = await supabaseAdmin
       .from("conversions")
       .insert([{
-        link_id: link.id,
+        campaign_id: link.campaign_id,
+        creator_id: link.creator_id,
         order_id: orderId,
-        sale_amount: Number(saleAmount),
-        commission_amount: Number(commissionAmount)
+        amount: Number(saleAmount),
+        currency: 'gbp',
+        status: 'pending'
       }])
       .select()
       .single();
@@ -64,18 +66,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to log conversion or already logged" }, { status: 400 });
     }
 
-    // 2. Automatically log the owed commission in the ledger (Status: Pending)
-    // The business owes the platform/creator this money. In a real world scenario, 
-    // we would either invoice the business at the end of the month via Stripe, or deduct from a pre-funded balance.
     await supabaseAdmin
       .from("ledger_entries")
       .insert([{
         campaign_id: link.campaign_id,
         creator_id: link.creator_id,
-        amount: Number(commissionAmount),
-        type: 'payout',
-        status: 'pending', // Pending until business pays invoice
-        description: `Affiliate Commission for order ${orderId}`
+        amount_total: Number(saleAmount),
+        amount_creator: Number(commissionAmount),
+        amount_platform: Number(commissionAmount) * 0.1, // Platform takes 10% of commission
+        currency: 'gbp',
+        status: 'pending' // Pending until business pays invoice
       }]);
 
     return NextResponse.json({ 

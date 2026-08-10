@@ -13,11 +13,10 @@ export default async function CreatorDashboard() {
   // Fetch actual earnings from ledger
   const { data: ledgers } = await supabase
     .from("ledger_entries")
-    .select("amount")
-    .eq("creator_id", user.id)
-    .eq("type", "payout");
+    .select("amount_creator")
+    .eq("creator_id", user.id);
 
-  const totalEarnings = ledgers?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
+  const totalEarnings = ledgers?.reduce((sum, item) => sum + Number(item.amount_creator), 0) || 0;
 
   // Fetch active campaigns (accepted applications)
   const { count: activeCampaigns } = await supabase
@@ -27,20 +26,11 @@ export default async function CreatorDashboard() {
     .eq("status", "accepted");
 
   // Fetch clicks
-  const { data: links } = await supabase
-    .from("campaign_links")
-    .select("id")
+  const { count: clicksCount } = await supabase
+    .from("clicks")
+    .select("*", { count: 'exact', head: true })
     .eq("creator_id", user.id);
-  
-  let totalClicks = 0;
-  if (links && links.length > 0) {
-    const linkIds = links.map(l => l.id);
-    const { count: clicksCount } = await supabase
-      .from("clicks")
-      .select("*", { count: 'exact', head: true })
-      .in("link_id", linkIds);
-    totalClicks = clicksCount || 0;
-  }
+  let totalClicks = clicksCount || 0;
 
   // Calculate EPC
   const epc = totalClicks > 0 ? (totalEarnings / totalClicks).toFixed(2) : "0.00";

@@ -55,7 +55,7 @@ export async function POST(request: Request) {
           const applicationFeeAmount = (paymentIntent.application_fee_amount || 0) / 100;
           const creatorAmount = amountTotal - applicationFeeAmount;
 
-          await supabaseAdmin.from("ledger_entries").insert({
+          const { error: ledgerError } = await supabaseAdmin.from("ledger_entries").insert({
             business_id: session.metadata.business_id,
             campaign_id: session.metadata.campaign_id,
             creator_id: session.metadata.creator_id || null,
@@ -66,6 +66,10 @@ export async function POST(request: Request) {
             currency: session.currency || "gbp",
             status: "succeeded"
           });
+          
+          if (ledgerError) {
+            console.error("Failed to insert into ledger_entries:", ledgerError);
+          }
         }
         break;
       }
