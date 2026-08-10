@@ -20,6 +20,7 @@ export default function NewCampaignPage() {
     commission_rate: "",
     deliverables: [] as string[],
     target_url: "",
+    cookie_window_days: "30",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -52,10 +53,11 @@ export default function NewCampaignPage() {
         title: formData.title,
         description: formData.description,
         compensation_model: formData.compensation_model,
-        fixed_fee: formData.fixed_fee ? parseFloat(formData.fixed_fee) : 0,
-        commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : 0,
+        fixed_fee: formData.compensation_model !== "performance" ? parseFloat(formData.fixed_fee) : null,
+        commission_rate: formData.compensation_model !== "fixed" ? parseFloat(formData.commission_rate) : null,
         deliverables: formData.deliverables,
         target_url: formData.target_url,
+        cookie_window_days: parseInt(formData.cookie_window_days),
         status: "active"
       });
 
@@ -70,7 +72,7 @@ export default function NewCampaignPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto fade-in-up">
+    <div className="w-full fade-in-up">
       <Link href="/dashboard/business/campaigns" className="flex items-center gap-2 text-[var(--foreground)]/60 hover:text-[var(--foreground)] font-medium mb-8 transition-colors">
         <ArrowLeft size={18} />
         Back to Campaigns
@@ -224,7 +226,6 @@ export default function NewCampaignPage() {
               </div>
             )}
             
-            {(formData.compensation_model === 'performance' || formData.compensation_model === 'hybrid') && (
               <div className="fade-in-up">
                 <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Commission Rate (%)</label>
                 <input
@@ -238,6 +239,24 @@ export default function NewCampaignPage() {
                   onChange={handleChange}
                   placeholder="e.g. 15"
                   className="w-full px-4 py-3 rounded-xl border border-[var(--border-subtle)] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none transition-all font-medium"
+                />
+              </div>
+            )}
+            
+            {(formData.compensation_model === 'performance' || formData.compensation_model === 'hybrid') && (
+              <div className="fade-in-up md:col-span-2">
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Tracking Cookie Duration (Days)</label>
+                <p className="text-xs text-[var(--foreground)]/60 mb-2 font-medium">How many days after a click will the creator still earn commission? (1-30 days)</p>
+                <input
+                  required
+                  type="number"
+                  min="1"
+                  max="30"
+                  step="1"
+                  name="cookie_window_days"
+                  value={formData.cookie_window_days}
+                  onChange={handleChange}
+                  className="w-full md:w-1/2 px-4 py-3 rounded-xl border border-[var(--border-subtle)] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none transition-all font-medium"
                 />
               </div>
             )}

@@ -195,6 +195,7 @@ export default function CreatorCampaignsPage() {
               ) : (
                 applications.map((app) => {
                   const campaign = app.campaign;
+                  if (!campaign) return null;
                   const businessName = campaign.business?.raw_user_meta_data?.company_name || 
                                      campaign.business?.raw_user_meta_data?.full_name || "Premium Brand";
                   return (

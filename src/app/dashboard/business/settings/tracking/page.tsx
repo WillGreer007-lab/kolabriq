@@ -31,7 +31,7 @@ export default async function TrackingScriptPage() {
 <!-- End Kolabriq Conversion Event -->`;
 
   return (
-    <div className="space-y-8 fade-in-up max-w-4xl">
+    <div className="space-y-8 fade-in-up w-full">
       <div>
         <h1 className="text-3xl font-heading font-extrabold text-[var(--foreground)] tracking-tight">
           Tracking Scripts

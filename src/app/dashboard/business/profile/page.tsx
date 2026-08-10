@@ -19,7 +19,7 @@ export default async function ProfilePage() {
         </p>
       </div>
 
-      <div className="pixis-card bg-white p-8 border border-[var(--border-subtle)] max-w-2xl">
+      <div className="pixis-card bg-white p-8 border border-[var(--border-subtle)] w-full">
         <div className="flex items-center gap-6 mb-8">
           <div className="w-24 h-24 rounded-full bg-[#10B981]/10 flex items-center justify-center text-[#10B981]">
             <UserCircle size={48} />
