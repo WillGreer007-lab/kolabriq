@@ -46,7 +46,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex">
+    <div className="min-h-screen bg-[var(--background)] flex w-full">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 flex-col bg-white border-r border-[var(--border-subtle)] sticky top-0 h-screen">
         <div className="h-24 flex items-center px-8 border-b border-[var(--border-subtle)]">
@@ -133,7 +133,7 @@ export default function DashboardLayout({
 
         {/* Main scrollable area */}
         <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12">
-          <div className="max-w-6xl mx-auto w-full fade-in-up">
+          <div className="w-full fade-in-up">
             {children}
           </div>
         </main>
