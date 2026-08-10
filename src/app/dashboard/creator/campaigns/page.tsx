@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Briefcase, Loader2, Megaphone, Plus, Link as LinkIcon, Copy, Sparkles, X } from "lucide-react";
+import { Briefcase, Loader2, Megaphone, Plus, Link as LinkIcon, Copy, Sparkles, X, Upload } from "lucide-react";
 import Link from "next/link";
 
 export default function CreatorCampaignsPage() {
@@ -11,6 +11,7 @@ export default function CreatorCampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [generatedLinks, setGeneratedLinks] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState<string | null>(null);
   
   // AI State
   const [generatingAI, setGeneratingAI] = useState<string | null>(null);
@@ -63,6 +64,40 @@ export default function CreatorCampaignsPage() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert("Tracking link copied to clipboard!");
+  };
+
+  const handleUploadVideo = async (e: React.ChangeEvent<HTMLInputElement>, campaignId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(campaignId);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not logged in");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${campaignId}_${user.id}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `videos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      await supabase
+        .from('campaign_applications')
+        .update({ deliverable_url: fileName })
+        .eq('campaign_id', campaignId)
+        .eq('creator_id', user.id);
+
+      alert("Video uploaded successfully! Cloudinary is optimizing it now.");
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to upload video");
+    } finally {
+      setUploading(null);
+    }
   };
 
   const fetchApplications = async () => {
@@ -220,11 +255,28 @@ export default function CreatorCampaignsPage() {
                             <button 
                               onClick={() => handleGenerateAI(campaign)}
                               disabled={generatingAI === campaign.id}
-                              className="btn-primary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center bg-gradient-to-r from-purple-600 to-blue-600 border-none hover:opacity-90"
+                              className="btn-primary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center bg-gradient-to-r from-purple-600 to-blue-600 border-none hover:opacity-90 mb-2"
                             >
                               {generatingAI === campaign.id ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                               AI Magic Caption
                             </button>
+
+                            <div className="relative w-full">
+                              <input 
+                                type="file" 
+                                accept="video/*"
+                                onChange={(e) => handleUploadVideo(e, campaign.id)}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                disabled={uploading === campaign.id}
+                              />
+                              <button 
+                                disabled={uploading === campaign.id}
+                                className="btn-secondary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center border-[var(--border-subtle)] hover:bg-[#10B981]/10 hover:text-[#10B981] hover:border-[#10B981]/30 transition-colors"
+                              >
+                                {uploading === campaign.id ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
+                                {uploading === campaign.id ? "Uploading..." : "Upload Video"}
+                              </button>
+                            </div>
                           </div>
                         )}
                       </td>

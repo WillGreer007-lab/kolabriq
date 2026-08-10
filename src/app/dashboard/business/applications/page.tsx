@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle, X, Loader2, ListOrdered, UserCircle } from "lucide-react";
+import { CheckCircle, X, Loader2, ListOrdered, UserCircle, Play } from "lucide-react";
+import { CloudinaryVideo } from "@/components/ui/CloudinaryVideo";
 
 export default function BusinessApplicationsPage() {
   const supabase = createClient();
   const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [fundingId, setFundingId] = useState<string | null>(null);
+  const [viewingVideo, setViewingVideo] = useState<string | null>(null);
 
   useEffect(() => {
     fetchApplications();
@@ -180,11 +182,44 @@ export default function BusinessApplicationsPage() {
                     </button>
                   </div>
                 )}
+
+                {app.status === 'accepted' && app.deliverable_url && (
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button 
+                      onClick={() => setViewingVideo(app.deliverable_url)}
+                      className="btn-primary py-2 px-4 text-sm flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 border-none"
+                    >
+                      <Play size={16} />
+                      View Deliverable
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {viewingVideo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-black rounded-2xl border border-[var(--border-subtle)] w-full max-w-4xl shadow-2xl overflow-hidden relative">
+            <div className="flex items-center justify-between p-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent">
+              <h3 className="text-lg font-bold text-white">Deliverable Review</h3>
+              <button onClick={() => setViewingVideo(null)} className="text-white/60 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <div className="aspect-video w-full flex items-center justify-center bg-black">
+              <CloudinaryVideo 
+                publicId={viewingVideo.split('.')[0]} 
+                width={1280} 
+                height={720} 
+                className="w-full h-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
