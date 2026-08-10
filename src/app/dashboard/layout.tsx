@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Megaphone, Wallet, Settings, LogOut, Menu, UserCircle, MessageCircle } from "lucide-react";
+import { LayoutDashboard, Megaphone, Wallet, Settings, LogOut, Menu, UserCircle, MessageCircle, ListOrdered } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardLayout({
@@ -35,6 +35,7 @@ export default function DashboardLayout({
         { name: "Discovery", href: `${baseRoute}/discovery`, icon: UserCircle },
         { name: "Campaigns", href: `${baseRoute}/campaigns`, icon: Megaphone },
         { name: "Messages", href: `${baseRoute}/messages`, icon: MessageCircle },
+        { name: "Applications", href: `${baseRoute}/applications`, icon: ListOrdered },
         { name: "Profile", href: `${baseRoute}/profile`, icon: UserCircle },
         { name: "Settings", href: `${baseRoute}/settings`, icon: Settings },
       ];
