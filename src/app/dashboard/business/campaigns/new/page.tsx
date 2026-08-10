@@ -18,12 +18,21 @@ export default function NewCampaignPage() {
     compensation_model: "performance",
     fixed_fee: "",
     commission_rate: "",
-    deliverables: "",
+    deliverables: [] as string[],
     target_url: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCheckboxChange = (deliverable: string) => {
+    setFormData(prev => ({
+      ...prev,
+      deliverables: prev.deliverables.includes(deliverable)
+        ? prev.deliverables.filter(d => d !== deliverable)
+        : [...prev.deliverables, deliverable]
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,7 +54,7 @@ export default function NewCampaignPage() {
         compensation_model: formData.compensation_model,
         fixed_fee: formData.fixed_fee ? parseFloat(formData.fixed_fee) : 0,
         commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : 0,
-        deliverables: formData.deliverables.split(",").map(d => d.trim()).filter(d => d.length > 0),
+        deliverables: formData.deliverables,
         target_url: formData.target_url,
         status: "active"
       });
@@ -114,15 +123,20 @@ export default function NewCampaignPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Required Deliverables (comma separated)</label>
-              <input
-                required
-                name="deliverables"
-                value={formData.deliverables}
-                onChange={handleChange}
-                placeholder="e.g. 1 Instagram Reel, 2 Story Posts"
-                className="w-full px-4 py-3 rounded-xl border border-[var(--border-subtle)] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none transition-all font-medium"
-              />
+              <label className="block text-sm font-bold text-[var(--foreground)] mb-3">Required Deliverables</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {["Instagram Reel", "Instagram Story", "TikTok Video", "YouTube Short", "YouTube Integration", "UGC Video"].map(del => (
+                  <label key={del} className={`cursor-pointer flex items-center gap-3 p-3 rounded-xl border transition-all ${formData.deliverables.includes(del) ? 'border-[#10B981] bg-[#10B981]/5' : 'border-[var(--border-subtle)] hover:border-[#10B981]/30'}`}>
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 text-[#10B981] rounded border-gray-300 focus:ring-[#10B981]" 
+                      checked={formData.deliverables.includes(del)}
+                      onChange={() => handleCheckboxChange(del)}
+                    />
+                    <span className="font-medium text-sm text-[var(--foreground)]">{del}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2 pt-2">
