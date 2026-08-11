@@ -52,7 +52,7 @@ export async function POST(request: Request) {
         if (session.mode === "subscription" && session.metadata?.user_id) {
           const plan = session.metadata.plan || "free";
           await supabaseAdmin
-            .from("profiles")
+            .from("users")
             .update({ 
               subscription_plan: plan,
               stripe_customer_id: session.customer as string,
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         // If the subscription is canceled/deleted or unpaid, downgrade to free
         if (subscription.status !== "active" && subscription.status !== "trialing") {
           await supabaseAdmin
-            .from("profiles")
+            .from("users")
             .update({ 
               subscription_plan: "free",
               stripe_subscription_id: null
