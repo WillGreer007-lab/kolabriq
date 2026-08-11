@@ -93,68 +93,68 @@ export default function PricingPage() {
     <main className="flex min-h-screen flex-col bg-[var(--background)]">
       <Navbar />
       
-      <section className="flex-1 w-full pt-32 pb-24 px-4 relative overflow-hidden flex items-center justify-center">
-        {/* Main White Container matching the mockup */}
-        <div className="bg-white w-full max-w-6xl mx-auto rounded-xl shadow-xl overflow-hidden fade-in-up">
+      <section className="flex-1 w-full relative overflow-hidden flex flex-col bg-[#F3F4F6]">
+        {/* Main Container taking up full width and height */}
+        <div className="w-full flex-1 flex flex-col fade-in-up">
           
-          <div className="pt-16 pb-8 text-center px-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-4">
+          <div className="pt-32 pb-12 text-center px-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight mb-6">
               Select your plan!
             </h1>
-            <p className="text-base text-gray-500 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
               Select the right plan for your business team.
             </p>
           </div>
 
           {/* Monthly / Annual Toggle */}
-          <div className="mx-auto flex items-center justify-center bg-gray-100 p-1 rounded-lg w-fit mb-12">
-            <button className="px-8 py-2.5 bg-[#2D2D2D] text-white text-sm font-medium rounded shadow-sm transition-all">
+          <div className="mx-auto flex items-center justify-center bg-gray-200 p-1.5 rounded-xl w-fit mb-16">
+            <button className="px-10 py-3 bg-[#2D2D2D] text-white text-base font-medium rounded-lg shadow-sm transition-all">
               Monthly
             </button>
-            <button className="px-8 py-2.5 text-gray-500 hover:text-gray-900 text-sm font-medium rounded transition-all">
+            <button className="px-10 py-3 text-gray-500 hover:text-gray-900 text-base font-medium rounded-lg transition-all">
               Annual
             </button>
           </div>
 
-          {/* Cards Container */}
-          <div className="bg-[#F3F4F6] p-4 md:p-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 max-w-5xl mx-auto">
+          {/* Cards Container - Full width grid */}
+          <div className="flex-1 w-full px-4 md:px-8 pb-24">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 w-full h-full max-w-[2000px] mx-auto min-h-[600px]">
               {plans.map((plan) => (
                 <div 
                   key={plan.name} 
-                  className={`relative flex flex-col p-8 md:p-10 ${
+                  className={`relative flex flex-col p-12 lg:p-16 ${
                     plan.isDark 
-                      ? 'bg-[#2D2D2D] text-white shadow-2xl z-10 scale-105 rounded-lg' 
-                      : 'bg-white text-gray-900 border border-gray-100'
+                      ? 'bg-[#2D2D2D] text-white shadow-2xl z-10 scale-[1.02] rounded-xl' 
+                      : 'bg-white text-gray-900 border border-gray-200'
                   }`}
                 >
-                  <div className="mb-8">
-                    <h3 className={`text-sm font-medium mb-4 ${plan.isDark ? 'text-gray-200' : 'text-gray-600'}`}>
+                  <div className="mb-12">
+                    <h3 className={`text-xl font-medium mb-6 ${plan.isDark ? 'text-gray-200' : 'text-gray-600'}`}>
                       {plan.displayName}
                     </h3>
                     
-                    <div className="flex items-baseline gap-1 mb-4">
-                      <span className="text-4xl md:text-5xl font-bold">£{plan.price}</span>
-                      <span className={`text-sm font-medium ${plan.isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <div className="flex items-baseline gap-2 mb-6">
+                      <span className="text-6xl md:text-7xl font-bold">£{plan.price}</span>
+                      <span className={`text-lg font-medium ${plan.isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         /month
                       </span>
                     </div>
                     
-                    <p className={`text-xs leading-relaxed ${plan.isDark ? 'text-gray-300' : 'text-gray-500'}`}>
+                    <p className={`text-base leading-relaxed ${plan.isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                       {plan.description}
                     </p>
                   </div>
                   
-                  <div className="flex-1 mb-10">
-                    <ul className="space-y-4">
+                  <div className="flex-1 mb-12">
+                    <ul className="space-y-6">
                       {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <div className={`mt-0.5 rounded-full p-0.5 ${plan.isDark ? 'bg-white text-[#2D2D2D]' : 'bg-[#2D2D2D] text-white'}`}>
-                            <Check size={12} strokeWidth={3} />
+                        <li key={idx} className="flex items-start gap-4">
+                          <div className={`mt-1 rounded-full p-1 ${plan.isDark ? 'bg-white text-[#2D2D2D]' : 'bg-[#2D2D2D] text-white'}`}>
+                            <Check size={16} strokeWidth={3} />
                           </div>
-                          <span className="text-sm font-medium leading-tight">
+                          <span className="text-lg font-medium leading-tight">
                             {feature.includes("Video Editing") ? (
-                              <span className="flex items-center gap-1 font-bold"><Video size={14}/> {feature}</span>
+                              <span className="flex items-center gap-2 font-bold text-[#4A90E2]"><Video size={18}/> {feature}</span>
                             ) : feature}
                           </span>
                         </li>
@@ -162,17 +162,19 @@ export default function PricingPage() {
                     </ul>
                   </div>
                   
-                  <button 
-                    onClick={() => handleSubscribe(plan.name, plan.price)}
-                    disabled={loading === plan.name}
-                    className={`w-full py-3.5 rounded-full text-sm font-bold flex justify-center items-center gap-2 transition-all ${
-                      plan.isDark 
-                        ? 'bg-white text-[#2D2D2D] hover:bg-gray-100' 
-                        : 'bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-900'
-                    }`}
-                  >
-                    {loading === plan.name ? <Loader2 className="animate-spin" size={18} /> : plan.buttonText}
-                  </button>
+                  <div className="mt-auto pt-8">
+                    <button 
+                      onClick={() => handleSubscribe(plan.name, plan.price)}
+                      disabled={loading === plan.name}
+                      className={`w-full py-5 rounded-full text-lg font-bold flex justify-center items-center gap-2 transition-all ${
+                        plan.isDark 
+                          ? 'bg-white text-[#2D2D2D] hover:bg-gray-100' 
+                          : 'bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-900'
+                      }`}
+                    >
+                      {loading === plan.name ? <Loader2 className="animate-spin" size={24} /> : plan.buttonText}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
