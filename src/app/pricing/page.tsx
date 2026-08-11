@@ -90,71 +90,69 @@ export default function PricingPage() {
   ];
 
   return (
-    <main className="flex min-h-screen flex-col bg-[var(--background)]">
+    <main className="flex min-h-screen flex-col bg-[#F3F4F6]">
       <Navbar />
       
-      <section className="flex-1 w-full relative overflow-hidden flex flex-col bg-[#F3F4F6]">
+      <section className="flex-1 w-full min-h-[calc(100vh-96px)] flex flex-col justify-between pt-28 pb-12 px-4 md:px-8 bg-[#F3F4F6]">
         {/* Main Container taking up full width and height */}
-        <div className="w-full flex-1 flex flex-col fade-in-up">
+        <div className="w-full flex-1 flex flex-col justify-between fade-in-up max-w-[1800px] mx-auto">
           
-          <div className="pt-32 pb-12 text-center px-4">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 tracking-tight mb-6">
+          <div className="pt-4 pb-8 text-center px-4">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 tracking-tight mb-4">
               Select your plan!
             </h1>
-            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
               Select the right plan for your business team.
             </p>
           </div>
 
           {/* Monthly / Annual Toggle */}
-          <div className="mx-auto flex items-center justify-center bg-gray-200 p-1.5 rounded-xl w-fit mb-16">
-            <button className="px-10 py-3 bg-[#2D2D2D] text-white text-base font-medium rounded-lg shadow-sm transition-all">
+          <div className="mx-auto flex items-center justify-center bg-gray-200 p-1.5 rounded-xl w-fit mb-8">
+            <button className="px-8 py-2.5 bg-[#2D2D2D] text-white text-base font-medium rounded-lg shadow-sm transition-all">
               Monthly
             </button>
-            <button className="px-10 py-3 text-gray-500 hover:text-gray-900 text-base font-medium rounded-lg transition-all">
+            <button className="px-8 py-2.5 text-gray-500 hover:text-gray-900 text-base font-medium rounded-lg transition-all">
               Annual
             </button>
           </div>
 
           {/* Cards Container - Full width grid */}
-          <div className="flex-1 w-full px-4 md:px-8 pb-24">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 w-full h-full max-w-[2000px] mx-auto min-h-[600px]">
+          <div className="flex-1 w-full flex flex-col justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-0 w-full flex-1 items-stretch min-h-[500px]">
               {plans.map((plan) => (
                 <div 
                   key={plan.name} 
-                  className={`relative flex flex-col p-12 lg:p-16 ${
+                  className={`relative flex flex-col justify-between p-8 md:p-12 lg:p-14 ${
                     plan.isDark 
-                      ? 'bg-[#2D2D2D] text-white shadow-2xl z-10 scale-[1.02] rounded-xl' 
-                      : 'bg-white text-gray-900 border border-gray-200'
+                      ? 'bg-[#2D2D2D] text-white shadow-2xl z-10 scale-[1.01] rounded-2xl md:rounded-xl' 
+                      : 'bg-white text-gray-900 border border-gray-200 rounded-2xl md:rounded-none md:first:rounded-l-2xl md:last:rounded-r-2xl'
                   }`}
                 >
-                  <div className="mb-12">
-                    <h3 className={`text-xl font-medium mb-6 ${plan.isDark ? 'text-gray-200' : 'text-gray-600'}`}>
+                  <div>
+                    <h3 className={`text-lg font-semibold mb-4 ${plan.isDark ? 'text-gray-200' : 'text-gray-600'}`}>
                       {plan.displayName}
                     </h3>
                     
-                    <div className="flex items-baseline gap-2 mb-6">
-                      <span className="text-6xl md:text-7xl font-bold">£{plan.price}</span>
-                      <span className={`text-lg font-medium ${plan.isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    <div className="flex items-baseline gap-2 mb-4">
+                      <span className="text-5xl md:text-6xl font-extrabold">£{plan.price}</span>
+                      <span className={`text-base font-medium ${plan.isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                         /month
                       </span>
                     </div>
                     
-                    <p className={`text-base leading-relaxed ${plan.isDark ? 'text-gray-300' : 'text-gray-500'}`}>
+                    <p className={`text-sm leading-relaxed mb-8 ${plan.isDark ? 'text-gray-300' : 'text-gray-500'}`}>
                       {plan.description}
                     </p>
-                  </div>
-                  
-                  <div className="flex-1 mb-12">
-                    <ul className="space-y-6">
+                    
+                    <ul className="space-y-4">
                       {plan.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-start gap-4">
-                          <div className={`mt-1 rounded-full p-1 ${plan.isDark ? 'bg-white text-[#2D2D2D]' : 'bg-[#2D2D2D] text-white'}`}>
-                            <Check size={16} strokeWidth={3} />
+                        <li key={idx} className="flex items-start gap-3">
+                          <div className={`mt-0.5 rounded-full p-1 shrink-0 ${plan.isDark ? 'bg-white text-[#2D2D2D]' : 'bg-[#2D2D2D] text-white'}`}>
+                            <Check size={14} strokeWidth={3} />
                           </div>
-                          <span className="text-lg font-medium leading-tight">
+                          <span className="text-base font-medium leading-tight">
                             {feature.includes("Video Editing") ? (
-                              <span className="flex items-center gap-2 font-bold text-[#4A90E2]"><Video size={18}/> {feature}</span>
+                              <span className="flex items-center gap-1.5 font-bold text-[#4A90E2]"><Video size={16}/> {feature}</span>
                             ) : feature}
                           </span>
                         </li>
@@ -162,17 +160,17 @@ export default function PricingPage() {
                     </ul>
                   </div>
                   
-                  <div className="mt-auto pt-8">
+                  <div className="pt-8 mt-auto">
                     <button 
                       onClick={() => handleSubscribe(plan.name, plan.price)}
                       disabled={loading === plan.name}
-                      className={`w-full py-5 rounded-full text-lg font-bold flex justify-center items-center gap-2 transition-all ${
+                      className={`w-full py-4 rounded-full text-base font-bold flex justify-center items-center gap-2 transition-all ${
                         plan.isDark 
                           ? 'bg-white text-[#2D2D2D] hover:bg-gray-100' 
-                          : 'bg-white text-gray-900 border-2 border-gray-200 hover:border-gray-900'
+                          : 'bg-[#2D2D2D] text-white hover:bg-gray-800'
                       }`}
                     >
-                      {loading === plan.name ? <Loader2 className="animate-spin" size={24} /> : plan.buttonText}
+                      {loading === plan.name ? <Loader2 className="animate-spin" size={20} /> : plan.buttonText}
                     </button>
                   </div>
                 </div>
