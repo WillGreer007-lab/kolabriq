@@ -3,15 +3,15 @@ import { ArrowRight } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-[var(--foreground)] text-white pt-24 pb-12">
+    <footer className="bg-[var(--foreground)] text-white pt-16 pb-8">
       <div className="container-custom">
         {/* Massive Footer CTA matching Pixis style */}
-        <div className="mb-24 pb-24 border-b border-white/10 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-12">
+        <div className="mb-12 pb-12 border-b border-white/10 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-12">
           <h2 className="text-4xl md:text-6xl font-heading font-extrabold max-w-2xl leading-none tracking-tight">
             Ready to revolutionize your marketing?
           </h2>
-          <Link href="/auth/signup" className="btn-primary bg-[#10B981] hover:bg-[#059669] text-white flex-shrink-0">
-            Get a demo
+          <Link href="/pricing" className="bg-[#10B981] hover:bg-[#0EA5E9] text-white font-bold py-3 px-8 rounded-xl transition-colors">
+            Pricing
           </Link>
         </div>
 

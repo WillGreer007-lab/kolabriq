@@ -3,12 +3,12 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative pt-48 pb-20 md:pt-64 md:pb-32 overflow-hidden flex flex-col items-center justify-center bg-[var(--background)]">
+    <section className="relative pt-24 pb-12 md:pt-32 md:pb-16 overflow-hidden flex flex-col items-center justify-center bg-[var(--background)]">
       {/* Decorative gradient orbs in background (very subtle on Pixis) */}
       <div className="absolute top-[20%] left-[10%] w-[40%] h-[40%] bg-[#FFB347]/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
       <div className="absolute top-[40%] right-[10%] w-[30%] h-[30%] bg-[#4A90E2]/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
-      <div className="container-custom relative z-10 w-full max-w-[1200px] mx-auto flex flex-col items-center mt-24">
+      <div className="container-custom relative z-10 w-full max-w-[1200px] mx-auto flex flex-col items-center mt-12">
         
         {/* Massive Pixis Typography */}
         <div className="text-center fade-in-up w-full flex flex-col items-center">
@@ -28,7 +28,7 @@ export default function Hero() {
         </div>
 
         {/* Carousel of Cards (Pixis Product Style) */}
-        <div className="w-full mt-20 fade-in-up delay-200">
+        <div className="w-full mt-12 fade-in-up delay-200">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             {/* Card 1: Prism / Business */}

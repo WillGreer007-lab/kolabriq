@@ -48,6 +48,21 @@ export async function POST(request: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         
+        // Handle Subscription Checkouts
+        if (session.mode === "subscription" && session.metadata?.user_id) {
+          const plan = session.metadata.plan || "free";
+          await supabaseAdmin
+            .from("profiles")
+            .update({ 
+              subscription_plan: plan,
+              stripe_customer_id: session.customer as string,
+              stripe_subscription_id: session.subscription as string
+            })
+            .eq("id", session.metadata.user_id);
+          break;
+        }
+
+        // Handle Payment Checkouts (Campaigns)
         if (session.payment_intent && session.metadata?.campaign_id) {
           const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent as string);
           
@@ -70,6 +85,22 @@ export async function POST(request: Request) {
           if (ledgerError) {
             console.error("Failed to insert into ledger_entries:", ledgerError);
           }
+        }
+        break;
+      }
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
+        
+        // If the subscription is canceled/deleted or unpaid, downgrade to free
+        if (subscription.status !== "active" && subscription.status !== "trialing") {
+          await supabaseAdmin
+            .from("profiles")
+            .update({ 
+              subscription_plan: "free",
+              stripe_subscription_id: null
+            })
+            .eq("stripe_subscription_id", subscription.id);
         }
         break;
       }

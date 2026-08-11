@@ -245,12 +245,11 @@ export default function CreatorCampaignsPage() {
                             )}
                             
                             <button 
-                              onClick={() => handleGenerateAI(campaign)}
-                              disabled={generatingAI === campaign.id}
-                              className="btn-primary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center bg-gradient-to-r from-purple-600 to-blue-600 border-none hover:opacity-90 mb-2"
+                              disabled={true}
+                              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1 bg-[#8B5CF6]/10 text-[#8B5CF6] opacity-50 cursor-not-allowed border-none mb-2"
                             >
-                              {generatingAI === campaign.id ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                              AI Magic Caption
+                              <Sparkles size={12} />
+                              AI Magic Caption (Coming Soon)
                             </button>
 
                             <div className="relative w-full">

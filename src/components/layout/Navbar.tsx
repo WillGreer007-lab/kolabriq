@@ -44,8 +44,8 @@ export default function Navbar() {
           <Link href="/auth/login" className="text-base font-semibold text-[var(--foreground)] hover:opacity-70 transition-opacity">
             Sign In
           </Link>
-          <Link href="/auth/signup" className="btn-primary">
-            Get a demo
+          <Link href="/pricing" className="btn-primary">
+            Pricing
           </Link>
         </div>
 

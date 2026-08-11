@@ -37,7 +37,7 @@ export default function Features() {
   return (
     <section className="section bg-white border-y border-[var(--border-subtle)]" id="features">
       <div className="container-custom">
-        <div className="flex flex-col items-center text-center mb-16 fade-in-up gap-6">
+        <div className="flex flex-col items-center text-center mb-10 fade-in-up gap-6">
           <div className="max-w-3xl">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold text-[var(--foreground)] mb-6 leading-none tracking-tight">
               Everything you need to scale
@@ -55,7 +55,7 @@ export default function Features() {
           {features.map((feature, index) => (
             <div 
               key={index} 
-              className="p-8 md:p-10 rounded-2xl bg-white shadow-sm border border-[var(--border-subtle)] hover:border-[#10B981]/30 transition-colors duration-500 group fade-in-up flex flex-col items-center text-center"
+              className="p-6 md:p-8 rounded-2xl bg-white shadow-sm border border-[var(--border-subtle)] hover:border-[#10B981]/30 transition-colors duration-500 group fade-in-up flex flex-col items-center text-center"
               style={{ animationDelay: `${(index % 3) * 0.1}s` }}
             >
               <div className="w-16 h-16 rounded-full bg-[var(--background)] flex items-center justify-center mb-8 shrink-0 text-[var(--foreground)] group-hover:text-[#10B981] group-hover:bg-[#10B981]/10 transition-all duration-500">
