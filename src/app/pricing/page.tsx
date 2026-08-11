@@ -103,7 +103,7 @@ export default function PricingPage() {
     <main className="flex min-h-screen flex-col bg-[var(--background)]">
       <Navbar />
       
-      <section className="pt-48 pb-24 md:pt-56 md:pb-32 px-4 relative overflow-hidden">
+      <section className="flex-1 w-full pt-48 pb-24 md:pt-56 md:pb-32 px-4 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-[#10B981]/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         
         <div className="max-w-7xl mx-auto flex flex-col items-center">
