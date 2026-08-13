@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Briefcase, Loader2, Megaphone, Plus, Link as LinkIcon, Copy, Sparkles, X, Upload } from "lucide-react";
+import { Briefcase, Loader2, Megaphone, Plus, Link as LinkIcon, Copy, Sparkles, X, Upload, HardDrive, FileVideo } from "lucide-react";
 import Link from "next/link";
 import { CldUploadWidget } from 'next-cloudinary';
 
@@ -13,6 +13,46 @@ export default function CreatorCampaignsPage() {
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [generatedLinks, setGeneratedLinks] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<string | null>(null);
+  
+  // Electron State
+  const [isElectron, setIsElectron] = useState(false);
+  const [compressing, setCompressing] = useState<string | null>(null);
+  const [compressionProgress, setCompressionProgress] = useState<number>(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).electronAPI) {
+      setIsElectron(true);
+    }
+  }, []);
+
+  const handleNativeCompression = async (campaignId: string) => {
+    if (!(window as any).electronAPI) return;
+    
+    setCompressing(campaignId);
+    setCompressionProgress(0);
+
+    (window as any).electronAPI.onCompressionProgress((progress: number) => {
+      setCompressionProgress(progress);
+    });
+
+    try {
+      const result = await (window as any).electronAPI.selectAndCompressVideo();
+      if (result.error) {
+        if (result.error !== 'No file selected') alert(result.error);
+      } else {
+        alert(`Video successfully compressed and saved to:\n${result.outputPath}\n\nYou can now upload this optimized file.`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Compression failed");
+    } finally {
+      setCompressing(null);
+      setCompressionProgress(0);
+      if ((window as any).electronAPI.removeCompressionProgressListener) {
+        (window as any).electronAPI.removeCompressionProgressListener();
+      }
+    }
+  };
 
   const handleGenerateLink = async (campaignId: string) => {
     setGeneratingFor(campaignId);
@@ -216,7 +256,32 @@ export default function CreatorCampaignsPage() {
                               </button>
                             )}
 
-                            <div className="relative w-full">
+                            <div className="relative w-full space-y-2">
+                              {isElectron && (
+                                <button
+                                  onClick={() => handleNativeCompression(campaign.id)}
+                                  disabled={compressing === campaign.id}
+                                  className="btn-primary w-full py-2 px-3 text-xs flex flex-col items-center gap-1 justify-center relative overflow-hidden"
+                                >
+                                  {compressing === campaign.id ? (
+                                    <>
+                                      <div className="flex items-center gap-2 relative z-10">
+                                        <Loader2 size={12} className="animate-spin" />
+                                        Compressing ({compressionProgress}%)
+                                      </div>
+                                      <div 
+                                        className="absolute top-0 left-0 bottom-0 bg-[#0E2F5A]/20 z-0 transition-all duration-300" 
+                                        style={{ width: `${compressionProgress}%` }}
+                                      />
+                                    </>
+                                  ) : (
+                                    <div className="flex items-center gap-1">
+                                      <HardDrive size={12} />
+                                      Mac Native Compression
+                                    </div>
+                                  )}
+                                </button>
+                              )}
                               {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
                                 <CldUploadWidget 
                                   uploadPreset="ml_default"

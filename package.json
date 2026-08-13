@@ -2,11 +2,14 @@
   "name": "kolabriq",
   "version": "0.1.0",
   "private": true,
+  "main": "main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "dev:desktop": "concurrently -k \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "build:desktop": "electron-builder"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
