@@ -23,7 +23,7 @@ function createWindow() {
   const isDev = process.env.NODE_ENV !== 'production';
   const startUrl = isDev 
     ? 'http://localhost:3000' 
-    : 'https://kolabriq-nh43.vercel.app'; // Replace with live URL if deployed
+    : 'https://adswish.vercel.app'; // Replace with live URL if deployed
 
   mainWindow.loadURL(startUrl);
 

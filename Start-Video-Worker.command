@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Starting Kolabriq Video Processing Worker..."
+echo "Starting Adswish Video Processing Worker..."
 echo "Please keep this terminal window open to process videos!"
 echo "--------------------------------------------------------"
 

@@ -46,11 +46,19 @@ Adswish comes with a native **macOS Desktop Application** built via Electron. Th
 
 ### How to install and launch the Desktop App:
 
-```bash
-# 1. Ensure you have installed the desktop-specific dev dependencies
-npm install -D electron electron-builder concurrently wait-on
+If you are running this on your local Mac, please follow these exact steps to avoid common directory or cache permission errors:
 
-# 2. Launch the Desktop App
+```bash
+# 1. Enter the project folder (CRITICAL STEP)
+cd ~/Desktop/kolabriq
+
+# 2. Pull the latest code
+git pull origin main
+
+# 3. Install the desktop-specific dev dependencies (with cache flag to bypass Mac permission errors)
+npm install -D electron electron-builder concurrently wait-on --cache /tmp/empty-cache
+
+# 4. Launch the Desktop App
 npm run dev:desktop
 ```
 
