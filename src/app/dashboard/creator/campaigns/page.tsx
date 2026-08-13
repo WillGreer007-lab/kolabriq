@@ -253,8 +253,9 @@ export default function CreatorCampaignsPage() {
                             </button>
 
                             <div className="relative w-full">
-                              <CldUploadWidget 
-                                uploadPreset="ml_default"
+                              {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+                                <CldUploadWidget 
+                                  uploadPreset="ml_default"
                                 onSuccess={(result: any) => handleCloudinarySuccess(result.info, campaign.id)}
                                 options={{
                                   sources: ['local', 'google_drive', 'dropbox'],
@@ -291,6 +292,15 @@ export default function CreatorCampaignsPage() {
                                   </button>
                                 )}
                               </CldUploadWidget>
+                              ) : (
+                                <button 
+                                  disabled
+                                  className="btn-secondary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center border-[var(--border-subtle)] opacity-50 cursor-not-allowed"
+                                >
+                                  <Upload size={12} />
+                                  Cloudinary Not Configured
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
