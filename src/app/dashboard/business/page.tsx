@@ -11,6 +11,15 @@ export default async function BusinessDashboard() {
     redirect("/auth/login");
   }
 
+  // Fetch business profile for pixel status
+  const { data: businessProfile } = await supabase
+    .from("business_profiles")
+    .select("pixel_status")
+    .eq("id", user.id)
+    .single();
+
+  const isPixelOffline = businessProfile?.pixel_status === "offline";
+
   // Fetch campaigns for this business
   const { data: myCampaigns } = await supabase
     .from("campaigns")
@@ -68,7 +77,25 @@ export default async function BusinessDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 fade-in-up">
+      {/* Penalty Warning */}
+      {isPixelOffline && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-xl flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+              <Activity size={16} />
+            </div>
+            <div>
+              <h3 className="font-bold text-red-900 text-sm">Pixel Offline — 12-Hour Penalty</h3>
+              <p className="text-red-700 text-xs mt-0.5">Your pixel heartbeat is failing. Your account will be restricted soon.</p>
+            </div>
+          </div>
+          <button className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold rounded-lg transition-colors">
+            Fix Now
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-heading font-extrabold text-[var(--foreground)] tracking-tight">
@@ -78,9 +105,17 @@ export default async function BusinessDashboard() {
             Track your campaign ROI and performance metrics in real-time.
           </p>
         </div>
-        <button className="btn-primary py-2 px-6 text-sm">
-          New Campaign
-        </button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[var(--border-subtle)] rounded-lg shadow-sm">
+            <div className={`w-2 h-2 rounded-full ${!isPixelOffline ? 'bg-[#10B981]' : 'bg-red-500 animate-pulse'}`} />
+            <span className={`text-xs font-bold ${!isPixelOffline ? 'text-[#10B981]' : 'text-red-500'}`}>
+              {!isPixelOffline ? 'Pixel Secure' : 'Pixel Offline'}
+            </span>
+          </div>
+          <Link href="/dashboard/business/campaigns/new" className="btn-primary py-2 px-6 text-sm">
+            New Campaign
+          </Link>
+        </div>
       </div>
 
       {/* Stats Grid */}

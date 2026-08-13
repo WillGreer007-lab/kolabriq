@@ -10,13 +10,24 @@ export default async function CreatorDashboard() {
     redirect("/auth/login");
   }
 
-  // Fetch actual earnings from ledger
+  // Fetch actual earnings from ledger separated by type
   const { data: ledgers } = await supabase
     .from("ledger_entries")
-    .select("amount_creator")
+    .select("amount_creator, entry_type")
     .eq("creator_id", user.id);
 
-  const totalEarnings = ledgers?.reduce((sum, item) => sum + Number(item.amount_creator), 0) || 0;
+  let fixedEarnings = 0;
+  let affiliateEarnings = 0;
+  
+  if (ledgers) {
+    ledgers.forEach(l => {
+      const amount = Number(l.amount_creator);
+      if (l.entry_type === 'fixed_payout') fixedEarnings += amount;
+      if (l.entry_type === 'commission') affiliateEarnings += amount;
+    });
+  }
+  
+  const totalEarnings = fixedEarnings + affiliateEarnings;
 
   // Fetch active campaigns (accepted applications)
   const { count: activeCampaigns } = await supabase
@@ -38,9 +49,9 @@ export default async function CreatorDashboard() {
   const firstName = user.user_metadata?.full_name?.split(" ")[0] || "Creator";
 
   const stats = [
-    { title: "Total Earnings", value: `£${totalEarnings.toLocaleString(undefined, {minimumFractionDigits: 2})}`, change: "+12%", icon: Wallet, color: "text-[#10B981]", bg: "bg-[#10B981]/10" },
-    { title: "Active Campaigns", value: (activeCampaigns || 0).toString(), change: "+2", icon: Megaphone, color: "text-[#4A90E2]", bg: "bg-[#4A90E2]/10" },
-    { title: "Total Link Clicks", value: totalClicks.toLocaleString(), change: "+5%", icon: Users, color: "text-[#FFB347]", bg: "bg-[#FFB347]/10" },
+    { title: "Total Fixed Earnings", value: `£${fixedEarnings.toLocaleString(undefined, {minimumFractionDigits: 2})}`, change: "+12%", icon: Wallet, color: "text-[#10B981]", bg: "bg-[#10B981]/10" },
+    { title: "Affiliate Commissions", value: `£${affiliateEarnings.toLocaleString(undefined, {minimumFractionDigits: 2})}`, change: "+24%", icon: Users, color: "text-[#4A90E2]", bg: "bg-[#4A90E2]/10" },
+    { title: "Total Hybrid Revenue", value: `£${totalEarnings.toLocaleString(undefined, {minimumFractionDigits: 2})}`, change: "+15%", icon: Megaphone, color: "text-[#F5A623]", bg: "bg-[#F5A623]/10" },
     { title: "Earnings Per Click", value: `£${epc}`, change: "+1%", icon: Target, color: "text-[#8B5CF6]", bg: "bg-[#8B5CF6]/10" },
   ];
 
