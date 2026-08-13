@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Paperclip, FileText, ExternalLink } from "lucide-react";
+import { CldUploadWidget } from "next-cloudinary";
 
 export default function ChatInterface({ userId, userType }: { userId: string, userType: 'business' | 'creator' }) {
   const supabase = createClient();
@@ -11,6 +12,7 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch initial conversations
@@ -66,9 +68,9 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
     };
   }, [activeConversation, supabase]);
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !activeConversation) return;
+  const sendMessage = async (e?: React.FormEvent, attachmentUrl?: string) => {
+    if (e) e.preventDefault();
+    if ((!newMessage.trim() && !attachmentUrl) || !activeConversation) return;
 
     const msg = newMessage;
     setNewMessage(""); // Optimistic clear
@@ -76,8 +78,22 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
     await supabase.from("messages").insert([{
       conversation_id: activeConversation.id,
       sender_id: userId,
-      content: msg
+      content: msg || (attachmentUrl ? "Sent an attachment" : ""),
+      attachment_url: attachmentUrl || null
     }]);
+  };
+
+  const handleCloudinarySuccess = async (resultInfo: any) => {
+    setUploading(true);
+    try {
+      const url = resultInfo.secure_url;
+      await sendMessage(undefined, url);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to send attachment");
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-[#10B981]" /></div>;
@@ -133,7 +149,14 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
             return (
               <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[75%] p-3 rounded-2xl text-sm ${isMe ? 'bg-[#10B981] text-white rounded-tr-sm' : 'bg-white border border-[var(--border-subtle)] text-[var(--foreground)] rounded-tl-sm'}`}>
-                  {msg.content}
+                  {msg.content && <p>{msg.content}</p>}
+                  {msg.attachment_url && (
+                    <a href={msg.attachment_url} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-2 p-2 bg-black/10 rounded-lg hover:bg-black/20 transition-colors">
+                      <FileText size={16} />
+                      <span className="font-bold underline text-xs">View Attachment</span>
+                      <ExternalLink size={14} />
+                    </a>
+                  )}
                 </div>
               </div>
             );
@@ -143,7 +166,27 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
 
         {/* Input */}
         <div className="p-4 bg-white border-t border-[var(--border-subtle)]">
-          <form onSubmit={sendMessage} className="flex gap-2">
+          <form onSubmit={(e) => sendMessage(e)} className="flex gap-2 items-center">
+            {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && (
+              <CldUploadWidget 
+                uploadPreset="ml_default"
+                onSuccess={(result: any) => handleCloudinarySuccess(result.info)}
+                options={{ multiple: false }}
+              >
+                {({ open }) => (
+                  <button 
+                    type="button"
+                    onClick={() => open()}
+                    disabled={uploading}
+                    className="p-2 text-[var(--foreground)]/50 hover:text-[#10B981] transition-colors"
+                    title="Attach File"
+                  >
+                    {uploading ? <Loader2 size={20} className="animate-spin" /> : <Paperclip size={20} />}
+                  </button>
+                )}
+              </CldUploadWidget>
+            )}
+            
             <input 
               type="text"
               value={newMessage}

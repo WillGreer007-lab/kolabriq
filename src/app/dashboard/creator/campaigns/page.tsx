@@ -13,34 +13,6 @@ export default function CreatorCampaignsPage() {
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [generatedLinks, setGeneratedLinks] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<string | null>(null);
-  
-  // AI State
-  const [generatingAI, setGeneratingAI] = useState<string | null>(null);
-  const [aiCaptionModal, setAiCaptionModal] = useState<{show: boolean, caption: string}>({show: false, caption: ""});
-
-  const handleGenerateAI = async (campaign: any) => {
-    setGeneratingAI(campaign.id);
-    try {
-      const res = await fetch("/api/ai/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          campaignTitle: campaign.title,
-          campaignDescription: campaign.description || "A brand campaign."
-        })
-      });
-      const data = await res.json();
-      if (data.caption) {
-        setAiCaptionModal({ show: true, caption: data.caption });
-      } else {
-        alert(data.error || "Failed to generate caption. Is GROQ_API_KEY set?");
-      }
-    } catch (e) {
-      console.error(e);
-      alert("Error contacting AI service.");
-    }
-    setGeneratingAI(null);
-  };
 
   const handleGenerateLink = async (campaignId: string) => {
     setGeneratingFor(campaignId);
@@ -243,14 +215,6 @@ export default function CreatorCampaignsPage() {
                                 Tracking Link
                               </button>
                             )}
-                            
-                            <button 
-                              disabled={true}
-                              className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1 bg-[#8B5CF6]/10 text-[#8B5CF6] opacity-50 cursor-not-allowed border-none mb-2"
-                            >
-                              <Sparkles size={12} />
-                              AI Magic Caption (Coming Soon)
-                            </button>
 
                             <div className="relative w-full">
                               {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
@@ -313,34 +277,6 @@ export default function CreatorCampaignsPage() {
           </table>
         </div>
       </div>
-
-      {/* AI Caption Modal */}
-      {aiCaptionModal.show && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl border border-[var(--border-subtle)] w-full max-w-lg p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-heading font-extrabold flex items-center gap-2 text-purple-600">
-                <Sparkles size={18} />
-                AI Generated Caption
-              </h3>
-              <button onClick={() => setAiCaptionModal({show: false, caption: ""})} className="text-[var(--foreground)]/60 hover:text-red-500">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="bg-[#F5F5F0] p-4 rounded-xl text-sm font-medium text-[var(--foreground)]/80 whitespace-pre-wrap">
-              {aiCaptionModal.caption}
-            </div>
-            <div className="mt-4 flex gap-3">
-              <button 
-                onClick={() => copyToClipboard(aiCaptionModal.caption)}
-                className="btn-primary flex-1 py-2"
-              >
-                Copy to Clipboard
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
