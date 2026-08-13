@@ -18,6 +18,7 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEmailSent, setIsEmailSent] = useState(false);
+  const [acceptedTC, setAcceptedTC] = useState(false);
   
   const router = useRouter();
   const supabase = createClient();
@@ -43,6 +44,11 @@ function SignupForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    if (!acceptedTC) {
+      setError("You must accept the Master Service Agreement & Liability Shield to continue.");
+      setLoading(false);
+      return;
+    }
 
     const { error: signUpError } = await supabase.auth.signUp({
       email,
@@ -206,10 +212,24 @@ function SignupForm() {
               />
             </div>
 
+            <div className="flex items-start gap-3 mt-4">
+              <input
+                type="checkbox"
+                id="tc"
+                checked={acceptedTC}
+                onChange={(e) => setAcceptedTC(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-[var(--border-subtle)] text-[var(--accent-primary)] focus:ring-[var(--accent-primary)]"
+              />
+              <label htmlFor="tc" className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                <strong className="text-[var(--text-primary)]">I accept the Master Service Agreement & Liability Shield.</strong><br/>
+                Adswish acts strictly as a marketplace facilitator and escrow routing software. Adswish is not a guarantor of earnings, sales, or campaign success. By proceeding, you agree that Adswish is entirely indemnified from any financial losses, unfulfilled expectations, or disputes arising between businesses and creators.
+              </label>
+            </div>
+
             <button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full py-4 text-lg mt-4 font-bold flex justify-center items-center h-[56px]"
+              disabled={loading || !acceptedTC}
+              className="btn-primary w-full py-4 text-lg mt-4 font-bold flex justify-center items-center h-[56px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? <Loader2 className="animate-spin" /> : "Sign Up"}
             </button>
