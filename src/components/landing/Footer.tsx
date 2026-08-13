@@ -19,7 +19,7 @@ export default function Footer() {
           <div className="md:col-span-5 pr-8">
             <Link href="/" className="flex items-center gap-2 mb-6 group">
               <div className="font-heading font-extrabold text-3xl tracking-tight text-white flex items-center">
-                Kolabriq<span className="text-[#10B981]">.</span>
+                Adswish<span className="text-[#10B981]">.</span>
               </div>
             </Link>
             <p className="text-lg text-white/60 leading-relaxed max-w-sm font-medium">
@@ -55,7 +55,7 @@ export default function Footer() {
         </div>
         
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 text-sm font-medium text-white/40 gap-4">
-          <p>&copy; {new Date().getFullYear()} Kolabriq. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Adswish. All rights reserved.</p>
           <div className="flex gap-8">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>

@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 
     // Get the first-party tracking cookie
     const cookieStore = await cookies();
-    const shortCode = cookieStore.get("kolabriq_ref")?.value;
+    const shortCode = cookieStore.get("adswish_ref")?.value;
 
     if (!shortCode) {
       return NextResponse.json({ message: "No tracking cookie found, skipping attribution" });

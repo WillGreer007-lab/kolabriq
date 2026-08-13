@@ -62,7 +62,7 @@ export async function GET(
 
     // Set first-party cookie for the specified duration
     const cookieStore = await cookies();
-    response.cookies.set('kolabriq_ref', code, {
+    response.cookies.set('adswish_ref', code, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

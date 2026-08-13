@@ -98,7 +98,7 @@ function SignupForm() {
         <div className="relative z-10 max-w-md px-12 text-center fade-in-up">
           <Link href="/" className="inline-flex items-center gap-2 mb-12">
             <div className="font-heading font-extrabold text-4xl tracking-tight text-[var(--foreground)] flex items-center">
-              Kolabriq<span className="text-[#10B981]">.</span>
+              Adswish<span className="text-[#10B981]">.</span>
             </div>
           </Link>
           <h1 className="text-4xl md:text-5xl font-heading font-extrabold text-[var(--foreground)] mb-6 tracking-tight leading-tight">
@@ -116,7 +116,7 @@ function SignupForm() {
           <div className="md:hidden mb-10 flex justify-center">
             <Link href="/" className="inline-flex items-center gap-2">
               <div className="font-heading font-extrabold text-3xl tracking-tight text-[var(--foreground)] flex items-center">
-                Kolabriq<span className="text-[#10B981]">.</span>
+                Adswish<span className="text-[#10B981]">.</span>
               </div>
             </Link>
           </div>

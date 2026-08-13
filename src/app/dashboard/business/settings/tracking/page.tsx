@@ -8,19 +8,19 @@ export default async function TrackingScriptPage() {
 
   if (!user) redirect("/auth/login");
 
-  const trackingSnippet = `<!-- Kolabriq Tracking Pixel -->
+  const trackingSnippet = `<!-- Adswish Tracking Pixel -->
 <script>
   (function(k,o,l,a,b,r,i,q){
-    k['KolabriqObject']=b;k[b]=k[b]||function(){
+    k['AdswishObject']=b;k[b]=k[b]||function(){
     (k[b].q=k[b].q||[]).push(arguments)},k[b].l=1*new Date();r=o.createElement(l),
     i=o.getElementsByTagName(l)[0];r.async=1;r.src=a;i.parentNode.insertBefore(r,i)
-  })(window,document,'script','https://kolabriq.com/track.js','kq');
+  })(window,document,'script','https://adswish.com/track.js','kq');
 
   kq('init', '${user.id}');
 </script>
-<!-- End Kolabriq Tracking Pixel -->`;
+<!-- End Adswish Tracking Pixel -->`;
 
-  const conversionSnippet = `<!-- Kolabriq Conversion Event -->
+  const conversionSnippet = `<!-- Adswish Conversion Event -->
 <script>
   kq('track', 'purchase', {
     order_id: 'ORDER_12345', // Replace dynamically
@@ -28,7 +28,7 @@ export default async function TrackingScriptPage() {
     currency: 'GBP'
   });
 </script>
-<!-- End Kolabriq Conversion Event -->`;
+<!-- End Adswish Conversion Event -->`;
 
   return (
     <div className="space-y-8 fade-in-up w-full">

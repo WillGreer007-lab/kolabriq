@@ -64,7 +64,7 @@ export default function DashboardLayout({
       <aside className="hidden md:flex w-64 flex-col bg-white border-r border-[var(--border-subtle)] sticky top-0 h-screen">
         <div className="h-24 flex items-center px-8 border-b border-[var(--border-subtle)]">
           <Link href="/" className="font-heading font-extrabold text-2xl tracking-tight text-[var(--foreground)]">
-            Kolabriq<span className="text-[#10B981]">.</span>
+            Adswish<span className="text-[#10B981]">.</span>
           </Link>
         </div>
         
@@ -104,7 +104,7 @@ export default function DashboardLayout({
         {/* Mobile Header */}
         <header className="md:hidden h-20 bg-white border-b border-[var(--border-subtle)] flex items-center justify-between px-6 shrink-0">
           <Link href="/" className="font-heading font-extrabold text-xl tracking-tight text-[var(--foreground)]">
-            Kolabriq<span className="text-[#10B981]">.</span>
+            Adswish<span className="text-[#10B981]">.</span>
           </Link>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-[var(--foreground)]">
             <Menu size={24} />

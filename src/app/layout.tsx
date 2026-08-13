@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kolabriq | Premium Creator Marketplace",
+  title: "Adswish | Premium Creator Marketplace",
   description: "The intelligent infrastructure for the next generation of creator marketing.",
 };
 

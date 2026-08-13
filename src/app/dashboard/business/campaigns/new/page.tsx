@@ -20,19 +20,36 @@ export default function NewCampaignPage() {
     commission_rate: "",
     deliverables: [] as string[],
     target_url: "",
-    cookie_window_days: "30",
+    cookie_window_days: "14",
   });
+
+  const [deliverableDetails, setDeliverableDetails] = useState<Record<string, { hashtag: string, deadline: string }>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleCheckboxChange = (deliverable: string) => {
-    setFormData(prev => ({
+    setFormData(prev => {
+      const isSelected = prev.deliverables.includes(deliverable);
+      if (isSelected) {
+        // Remove
+        const newDetails = { ...deliverableDetails };
+        delete newDetails[deliverable];
+        setDeliverableDetails(newDetails);
+        return { ...prev, deliverables: prev.deliverables.filter(d => d !== deliverable) };
+      } else {
+        // Add
+        setDeliverableDetails(d => ({ ...d, [deliverable]: { hashtag: `#Adswish_${deliverable.replace(/\s+/g, '')}`, deadline: '' } }));
+        return { ...prev, deliverables: [...prev.deliverables, deliverable] };
+      }
+    });
+  };
+
+  const handleDetailChange = (deliverable: string, field: 'hashtag' | 'deadline', value: string) => {
+    setDeliverableDetails(prev => ({
       ...prev,
-      deliverables: prev.deliverables.includes(deliverable)
-        ? prev.deliverables.filter(d => d !== deliverable)
-        : [...prev.deliverables, deliverable]
+      [deliverable]: { ...prev[deliverable], [field]: value }
     }));
   };
 
@@ -48,7 +65,7 @@ export default function NewCampaignPage() {
         throw new Error("You must be logged in to create a campaign.");
       }
 
-      const { error: insertError } = await supabase.from("campaigns").insert({
+      const { data: campaign, error: insertError } = await supabase.from("campaigns").insert({
         business_id: user.id,
         title: formData.title,
         description: formData.description,
@@ -57,11 +74,23 @@ export default function NewCampaignPage() {
         commission_rate: formData.compensation_model !== "fixed" ? parseFloat(formData.commission_rate) : null,
         deliverables: formData.deliverables,
         target_url: formData.target_url,
-        cookie_window_days: parseInt(formData.cookie_window_days),
+        attribution_days: parseInt(formData.cookie_window_days),
         status: "active"
-      });
+      }).select().single();
 
       if (insertError) throw insertError;
+
+      // Insert deliverables into the new table
+      if (campaign && formData.deliverables.length > 0) {
+        const deliverablesData = formData.deliverables.map((del, index) => ({
+          campaign_id: campaign.id,
+          slot_number: index + 1,
+          required_hashtag: deliverableDetails[del]?.hashtag || `#Adswish`,
+          deadline_date: deliverableDetails[del]?.deadline || new Date(Date.now() + 7*24*60*60*1000).toISOString(),
+        }));
+        const { error: delError } = await supabase.from("deliverables").insert(deliverablesData);
+        if (delError) console.error("Error inserting deliverables", delError);
+      }
 
       router.push("/dashboard/business/campaigns");
     } catch (err: any) {
@@ -126,7 +155,7 @@ export default function NewCampaignPage() {
 
             <div>
               <label className="block text-sm font-bold text-[var(--foreground)] mb-3">Required Deliverables</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                 {["Instagram Reel", "Instagram Story", "TikTok Video", "YouTube Short", "YouTube Integration", "UGC Video"].map(del => (
                   <label key={del} className={`cursor-pointer flex items-center gap-3 p-3 rounded-xl border transition-all ${formData.deliverables.includes(del) ? 'border-[#10B981] bg-[#10B981]/5' : 'border-[var(--border-subtle)] hover:border-[#10B981]/30'}`}>
                     <input 
@@ -139,6 +168,36 @@ export default function NewCampaignPage() {
                   </label>
                 ))}
               </div>
+
+              {formData.deliverables.length > 0 && (
+                <div className="space-y-4 p-4 rounded-xl border border-[var(--border-subtle)] bg-[#F5F5F0]/30">
+                  <h3 className="text-sm font-bold text-[var(--foreground)]">Deliverable Requirements</h3>
+                  {formData.deliverables.map(del => (
+                    <div key={del} className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-[var(--border-subtle)] last:border-0 last:pb-0">
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--foreground)] mb-1">{del} Hashtag</label>
+                        <input
+                          type="text"
+                          required
+                          value={deliverableDetails[del]?.hashtag || ''}
+                          onChange={(e) => handleDetailChange(del, 'hashtag', e.target.value)}
+                          className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--border-subtle)] focus:border-[#10B981] outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[var(--foreground)] mb-1">Strict Deadline</label>
+                        <input
+                          type="datetime-local"
+                          required
+                          value={deliverableDetails[del]?.deadline || ''}
+                          onChange={(e) => handleDetailChange(del, 'deadline', e.target.value)}
+                          className="w-full px-3 py-2 text-sm rounded-lg border border-[var(--border-subtle)] focus:border-[#10B981] outline-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2 pt-2">
@@ -245,19 +304,24 @@ export default function NewCampaignPage() {
             
             {(formData.compensation_model === 'performance' || formData.compensation_model === 'hybrid') && (
               <div className="fade-in-up md:col-span-2">
-                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">Tracking Cookie Duration (Days)</label>
-                <p className="text-xs text-[var(--foreground)]/60 mb-2 font-medium">How many days after a click will the creator still earn commission? (1-30 days)</p>
-                <input
-                  required
-                  type="number"
-                  min="1"
-                  max="30"
-                  step="1"
-                  name="cookie_window_days"
-                  value={formData.cookie_window_days}
-                  onChange={handleChange}
-                  className="w-full md:w-1/2 px-4 py-3 rounded-xl border border-[var(--border-subtle)] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981] outline-none transition-all font-medium"
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-bold text-[var(--foreground)]">Attribution Window: <span className="text-[#10B981]">{formData.cookie_window_days} Days</span></label>
+                </div>
+                <p className="text-xs text-[var(--foreground)]/60 mb-4 font-medium">If a customer buys {formData.cookie_window_days} days after clicking the creator's link, they still earn commission.</p>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-bold text-[var(--text-tertiary)]">1 Day</span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="30"
+                    step="1"
+                    name="cookie_window_days"
+                    value={formData.cookie_window_days}
+                    onChange={handleChange}
+                    className="w-full h-2 bg-[var(--border-subtle)] rounded-lg appearance-none cursor-pointer accent-[#10B981]"
+                  />
+                  <span className="text-xs font-bold text-[var(--text-tertiary)]">30 Days</span>
+                </div>
               </div>
             )}
           </div>

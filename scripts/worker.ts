@@ -22,7 +22,7 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-console.log("🎬 Kolabriq Real Video Processing Worker Started...");
+console.log("🎬 Adswish Real Video Processing Worker Started...");
 
 async function processVideo(job: any) {
   const { file_path } = job;

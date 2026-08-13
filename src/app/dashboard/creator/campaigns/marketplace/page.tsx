@@ -11,6 +11,9 @@ export default function CampaignMarketplace() {
   const [loading, setLoading] = useState(true);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [minRating, setMinRating] = useState<number>(0);
 
   const fetchCampaigns = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -26,13 +29,20 @@ export default function CampaignMarketplace() {
     const profilesMap: Record<string, any> = {};
     if (activeCampaigns && activeCampaigns.length > 0) {
       const businessIds = [...new Set(activeCampaigns.map(c => c.business_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", businessIds);
-        
+      
+      const [profilesResponse, businessProfilesResponse] = await Promise.all([
+        supabase.from("profiles").select("id, full_name").in("id", businessIds),
+        supabase.from("business_profiles").select("id, average_rating").in("id", businessIds)
+      ]);
+
+      const profiles = profilesResponse.data;
+      const businessProfiles = businessProfilesResponse.data;
+      
       if (profiles) {
-        profiles.forEach(p => { profilesMap[p.id] = p; });
+        profiles.forEach(p => { profilesMap[p.id] = { ...profilesMap[p.id], ...p }; });
+      }
+      if (businessProfiles) {
+        businessProfiles.forEach(bp => { profilesMap[bp.id] = { ...profilesMap[bp.id], average_rating: bp.average_rating }; });
       }
     }
 
@@ -53,7 +63,8 @@ export default function CampaignMarketplace() {
       const campaignsWithProfiles = activeCampaigns.map(c => ({
         ...c,
         business: {
-          raw_user_meta_data: { company_name: profilesMap[c.business_id]?.full_name }
+          raw_user_meta_data: { company_name: profilesMap[c.business_id]?.full_name },
+          average_rating: profilesMap[c.business_id]?.average_rating || 0
         }
       }));
       setCampaigns(campaignsWithProfiles);
@@ -108,13 +119,21 @@ export default function CampaignMarketplace() {
             <input 
               type="text" 
               placeholder="Search campaigns..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-white focus:outline-none focus:border-[#10B981] transition-colors text-sm font-medium"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-white hover:bg-[#F5F5F0] transition-colors text-sm font-bold text-[var(--foreground)]">
-            <Filter size={18} />
-            Filters
-          </button>
+          <select 
+            value={minRating}
+            onChange={(e) => setMinRating(Number(e.target.value))}
+            className="px-4 py-2.5 rounded-xl border border-[var(--border-subtle)] bg-white hover:bg-[#F5F5F0] transition-colors text-sm font-bold text-[var(--foreground)] outline-none"
+          >
+            <option value={0}>All Ratings</option>
+            <option value={4}>4+ Stars</option>
+            <option value={4.5}>4.5+ Stars</option>
+            <option value={5}>5 Stars</option>
+          </select>
         </div>
       </div>
 
@@ -124,11 +143,18 @@ export default function CampaignMarketplace() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {campaigns.map((campaign) => {
+          {campaigns
+            .filter(c => 
+              (c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+               c.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
+              c.business.average_rating >= minRating
+            )
+            .map((campaign) => {
             const hasApplied = appliedIds.has(campaign.id);
             const isApplying = applyingId === campaign.id;
             const businessMeta = campaign.business?.raw_user_meta_data || {};
             const businessName = businessMeta.company_name || businessMeta.full_name || "Premium Brand";
+            const rating = campaign.business?.average_rating || 0;
 
             return (
               <div key={campaign.id} className="pixis-card bg-white border border-[var(--border-subtle)] hover:border-[var(--foreground)]/20 transition-all flex flex-col group overflow-hidden">
@@ -153,7 +179,14 @@ export default function CampaignMarketplace() {
                   <h3 className="font-heading font-extrabold text-xl text-[var(--foreground)] tracking-tight line-clamp-1">
                     {campaign.title}
                   </h3>
-                  <p className="text-sm font-bold text-[#10B981] mt-1">{businessName}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-sm font-bold text-[#10B981]">{businessName}</p>
+                    {rating > 0 && (
+                      <span className="text-xs font-bold text-[#FFB347] flex items-center gap-1">
+                        ★ {Number(rating).toFixed(1)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Body */}

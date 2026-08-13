@@ -10,7 +10,7 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-2">
           {/* Simple dark SVGs are used in Pixis for the logo */}
           <div className="font-heading font-extrabold text-3xl tracking-tight text-[var(--foreground)] flex items-center">
-            Kolabriq<span className="text-[#10B981]">.</span>
+            Adswish<span className="text-[#10B981]">.</span>
           </div>
         </Link>
         

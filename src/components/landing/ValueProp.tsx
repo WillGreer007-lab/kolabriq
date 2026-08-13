@@ -66,7 +66,7 @@ export default function ValueProp() {
             </h2>
             
             <p className="text-xl text-[var(--foreground)]/70 font-medium leading-relaxed">
-              The days of paying flat fees for vanity metrics are over. Kolabriq empowers you to build campaigns based on actual performance and conversions.
+              The days of paying flat fees for vanity metrics are over. Adswish empowers you to build campaigns based on actual performance and conversions.
             </p>
 
             <ul className="space-y-6 mt-4">
