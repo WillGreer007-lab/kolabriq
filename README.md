@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Adswish: Premium Creator Marketplace
 
-## Getting Started
+Adswish is a full-stack, production-ready Creator Marketplace built with Next.js, Supabase, and Stripe. It seamlessly connects premium brands with high-converting creators, complete with escrow payouts, deliverable tracking, and accountability engines.
 
-First, run the development server:
+## 🚀 Features
 
+- **Business & Creator Dashboards:** Custom portals for brands to launch campaigns and creators to find work.
+- **Campaign Engine:** Strict deliverable slots, approval workflows, and a 1-30 day attribution tracker.
+- **Accountability Engine (pg_cron):** Automated PostgreSQL cron jobs that enforce 12-hour pixel penalties and 1-hour missed deadline kicks.
+- **Financial Routing (Stripe):** Integrated Stripe Checkout and Connect Express, featuring automated 90/10 destination charge splits for escrow payouts.
+- **Realtime Chat & File Sharing:** Native 1-on-1 messaging powered by Supabase WebSockets, with built-in Cloudinary file attachments.
+- **Native Mac Desktop App:** An Electron wrapper that utilizes `fluent-ffmpeg` to natively compress and process high-resolution video files directly on your computer's CPU before uploading!
+
+---
+
+## 💻 Installation Instructions
+
+To run Adswish locally, follow these steps:
+
+### 1. Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) (v18+) and npm installed on your machine.
+You will also need to duplicate `.env.example` into `.env.local` and fill in your Supabase, Stripe, and Cloudinary keys.
+
+### 2. Install Dependencies
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone https://github.com/WillGreer007-lab/kolabriq.git
+cd kolabriq
+
+# Install all required packages
+npm install
 ```
 
+### 3. Running the Web Platform (Browser)
+If you just want to run the standard Next.js website in your browser:
+```bash
+npm run dev
+```
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🖥️ Adswish Desktop App (Native Video Editing)
 
-## Learn More
+Adswish comes with a native **macOS Desktop Application** built via Electron. This Desktop App unlocks the "Mac Native Compression" feature, allowing Creators to securely trim and compress huge 4K video files using their local CPU hardware (FFmpeg) rather than relying on browser uploads.
 
-To learn more about Next.js, take a look at the following resources:
+### How to install and launch the Desktop App:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# 1. Ensure you have installed the desktop-specific dev dependencies
+npm install -D electron electron-builder concurrently wait-on
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 2. Launch the Desktop App
+npm run dev:desktop
+```
 
-## Deploy on Vercel
+This command will automatically boot up your local Next.js server in the background and instantly open the sleek, native macOS application window! Navigate to your **Creator > My Campaigns** page inside the Desktop App to see the exclusive native video processing features.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Building for Production (Creating the .dmg Installer)
+To compile the Desktop App into a standalone macOS `.dmg` or `.app` installer that you can distribute to creators:
+```bash
+npm run build:desktop
+```
+The packaged installers will be generated inside the `/dist` folder.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🛠️ Tech Stack
+- **Framework:** Next.js (App Router) + TypeScript
+- **Database, Auth, Storage, WebSockets:** Supabase
+- **Styling:** Vanilla CSS (`globals.css`) + Custom Pixis UI tokens
+- **Payments:** Stripe Checkout & Connect Express
+- **Video Processing:** Cloudinary (Web) + FFmpeg (Desktop)
+- **Desktop Wrapper:** Electron
