@@ -20,7 +20,7 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
     const fetchConversations = async () => {
       const { data } = await supabase
         .from("conversations")
-        .select("*, campaigns(title), business:business_id(raw_user_meta_data), creator:creator_id(raw_user_meta_data)")
+        .select("*, campaigns(title)")
         .or(`business_id.eq.${userId},creator_id.eq.${userId}`);
       
       if (data) {
@@ -112,8 +112,7 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
       {/* Sidebar */}
       <div className="w-1/3 border-r border-[var(--border-subtle)] bg-[#F5F5F0]/30 overflow-y-auto">
         {conversations.map(conv => {
-          const otherUser = userType === 'business' ? conv.creator : conv.business;
-          const otherName = otherUser?.raw_user_meta_data?.full_name || otherUser?.raw_user_meta_data?.company_name || "User";
+          const otherName = userType === 'business' ? "Creator" : "Business";
           
           return (
             <button
@@ -135,9 +134,7 @@ export default function ChatInterface({ userId, userType }: { userId: string, us
         {/* Header */}
         <div className="p-4 border-b border-[var(--border-subtle)] bg-white">
           <h2 className="font-heading font-extrabold text-lg">
-            {userType === 'business' 
-              ? activeConversation.creator?.raw_user_meta_data?.full_name 
-              : activeConversation.business?.raw_user_meta_data?.company_name || activeConversation.business?.raw_user_meta_data?.full_name}
+            {userType === 'business' ? "Creator" : "Business"}
           </h2>
           <p className="text-xs text-[#10B981] font-bold">{activeConversation.campaigns?.title}</p>
         </div>
