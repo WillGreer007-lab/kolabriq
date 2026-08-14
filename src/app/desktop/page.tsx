@@ -1,3 +1,5 @@
+"use client";
+
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/landing/Footer";
 import { Download, MonitorPlay, Terminal, ShieldAlert } from "lucide-react";
