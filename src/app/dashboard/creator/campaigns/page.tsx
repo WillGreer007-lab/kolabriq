@@ -5,6 +5,128 @@ import { createClient } from "@/lib/supabase/client";
 import { Briefcase, Loader2, Megaphone, Plus, Link as LinkIcon, Copy, Sparkles, X, Upload, HardDrive, FileVideo } from "lucide-react";
 import Link from "next/link";
 import { CldUploadWidget } from 'next-cloudinary';
+import { Lock, Unlock } from 'lucide-react';
+
+const CampaignTimeline = ({ campaign, generatedLink, handleGenerateLink, generatingFor, handleCloudinarySuccess, isElectron, handleNativeCompression, compressing, compressionProgress }: any) => {
+  const supabase = createClient();
+  const [deliverables, setDeliverables] = useState<any[]>([]);
+  const [uploading, setUploading] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDeliverables = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("deliverables")
+        .select("*")
+        .eq("campaign_id", campaign.id)
+        .eq("creator_id", user.id)
+        .order("slot_number", { ascending: true });
+      if (data) setDeliverables(data);
+    };
+    fetchDeliverables();
+  }, [campaign.id]);
+
+  // For this aesthetic demo, we assume the first deliverable dictates the timeline state.
+  const del = deliverables[0];
+  const isUploaded = !!del?.submitted_url;
+  const isApproved = !!del?.business_approved;
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert("Tracking link copied to clipboard!");
+  };
+
+  return (
+    <div className="mt-6 flex flex-col md:flex-row gap-4 relative">
+      {/* Box 1: Deliverable */}
+      <div className={`flex-1 glass-panel p-6 border ${isUploaded ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/5' : 'border-[var(--border)]'} relative overflow-hidden transition-all duration-500`}>
+        {isUploaded ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <CheckCircle className="text-[var(--accent-primary)] mb-2" size={32} strokeWidth={1.5} />
+            <h4 className="font-heading font-extrabold text-[var(--foreground)] tracking-tighter">Content Uploaded</h4>
+            <p className="text-xs text-[var(--text-secondary)] font-mono mt-1">Awaiting verification</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--accent-tertiary)]/10 text-[var(--accent-tertiary)] flex items-center justify-center mb-4 animate-pulse">
+              <Upload size={20} strokeWidth={1.5} />
+            </div>
+            <h4 className="font-heading font-extrabold text-[var(--foreground)] tracking-tighter mb-2">Awaiting Deliverable</h4>
+            
+            {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
+              <CldUploadWidget 
+                uploadPreset="ml_default"
+                onSuccess={(result: any) => handleCloudinarySuccess(result.info, campaign.id, del?.id, () => setDeliverables(prev => prev.map(d => d.id === del.id ? {...d, submitted_url: result.info.secure_url} : d)))}
+              >
+                {({ open }) => (
+                  <button onClick={() => open()} className="btn-neon w-full text-xs py-2">
+                    Upload Content
+                  </button>
+                )}
+              </CldUploadWidget>
+            ) : (
+              <button disabled className="btn-secondary opacity-50 cursor-not-allowed text-xs w-full">Cloudinary Not Configured</button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Box 2: Approval */}
+      <div className="flex-1 glass-panel p-6 border border-[var(--border)] relative overflow-hidden flex flex-col items-center justify-center text-center">
+        {!isApproved && (
+          <div className="absolute inset-0 backdrop-blur-xl bg-[var(--background)]/80 z-10 flex items-center justify-center transition-all duration-700">
+            <Lock className="text-[var(--text-secondary)]/50" size={32} strokeWidth={1} />
+          </div>
+        )}
+        <CheckCircle className="text-[var(--accent-secondary)] mb-2 relative z-0" size={32} strokeWidth={1.5} />
+        <h4 className="font-heading font-extrabold text-[var(--foreground)] tracking-tighter relative z-0">Brand Approved</h4>
+        <p className="text-xs text-[var(--text-secondary)] font-mono mt-1 relative z-0">Network unlocked</p>
+      </div>
+
+      {/* Box 3: Tracking Link */}
+      <div className="flex-1 glass-panel p-6 border border-[var(--border)] relative overflow-hidden flex flex-col items-center justify-center text-center">
+        {!isApproved && (
+          <div className="absolute inset-0 backdrop-blur-xl bg-[var(--background)]/80 z-10 flex items-center justify-center transition-all duration-700">
+            <Lock className="text-[var(--text-secondary)]/50" size={32} strokeWidth={1} />
+          </div>
+        )}
+        
+        {isApproved && generatedLink ? (
+          <div className="w-full relative z-0 animate-in fade-in zoom-in duration-700">
+            <h4 className="font-heading font-extrabold text-[var(--foreground)] tracking-tighter mb-4">Traffic Hub</h4>
+            <div className="flex items-center gap-2 bg-[var(--background-subtle)] border border-[var(--accent-secondary)]/30 px-3 py-2 rounded-xl shadow-[0_0_15px_rgba(74,144,226,0.1)]">
+              <input 
+                readOnly 
+                value={generatedLink} 
+                className="bg-transparent border-none outline-none text-xs text-[var(--accent-secondary)] w-full truncate font-mono"
+              />
+              <button onClick={() => copyToClipboard(generatedLink)} className="text-[var(--text-secondary)] hover:text-[var(--accent-secondary)] transition-colors">
+                <Copy size={16} strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        ) : isApproved && !generatedLink ? (
+          <div className="relative z-0">
+            <h4 className="font-heading font-extrabold text-[var(--foreground)] tracking-tighter mb-4">Traffic Hub</h4>
+            <button 
+              onClick={() => handleGenerateLink(campaign.id)}
+              disabled={generatingFor === campaign.id}
+              className="btn-neon w-full py-2 text-xs"
+            >
+              {generatingFor === campaign.id ? "Generating..." : "Materialize Link"}
+            </button>
+          </div>
+        ) : (
+          <div className="relative z-0 opacity-50">
+            <h4 className="font-heading font-extrabold text-[var(--foreground)] tracking-tighter mb-4">Traffic Hub</h4>
+            <div className="h-10 bg-[var(--border)] rounded-xl w-full"></div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function CreatorCampaignsPage() {
   const supabase = createClient();
@@ -79,7 +201,7 @@ export default function CreatorCampaignsPage() {
     alert("Tracking link copied to clipboard!");
   };
 
-  const handleCloudinarySuccess = async (resultInfo: any, campaignId: string) => {
+  const handleCloudinarySuccess = async (resultInfo: any, campaignId: string, deliverableId?: string, onSuccessCallback?: () => void) => {
     setUploading(campaignId);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -88,11 +210,22 @@ export default function CreatorCampaignsPage() {
       // The secure_url points to the video on Cloudinary
       const videoUrl = resultInfo.secure_url;
 
+      // Update campaign applications legacy URL
       await supabase
         .from('campaign_applications')
         .update({ deliverable_url: videoUrl })
         .eq('campaign_id', campaignId)
         .eq('creator_id', user.id);
+
+      // Update specific deliverable if ID provided
+      if (deliverableId) {
+        await supabase
+          .from('deliverables')
+          .update({ submitted_url: videoUrl })
+          .eq('id', deliverableId);
+      }
+
+      if (onSuccessCallback) onSuccessCallback();
 
       alert("Video processed and uploaded successfully via Cloudinary!");
     } catch (err: any) {
@@ -175,11 +308,11 @@ export default function CreatorCampaignsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-[var(--border-subtle)] bg-[var(--background)]">
-                <th className="py-4 px-6 font-bold text-[var(--foreground)]/70 text-sm">Campaign</th>
-                <th className="py-4 px-6 font-bold text-[var(--foreground)]/70 text-sm">Brand</th>
-                <th className="py-4 px-6 font-bold text-[var(--foreground)]/70 text-sm">Application Status</th>
-                <th className="py-4 px-6 font-bold text-[var(--foreground)]/70 text-sm">Model</th>
+              <tr className="border-b border-[var(--border)] bg-[var(--background-subtle)]">
+                <th className="py-4 px-6 font-bold text-[var(--text-secondary)] font-mono uppercase tracking-widest text-xs">Campaign</th>
+                <th className="py-4 px-6 font-bold text-[var(--text-secondary)] font-mono uppercase tracking-widest text-xs">Brand</th>
+                <th className="py-4 px-6 font-bold text-[var(--text-secondary)] font-mono uppercase tracking-widest text-xs">Network Status</th>
+                <th className="py-4 px-6 font-bold text-[var(--text-secondary)] font-mono uppercase tracking-widest text-xs">Compensation</th>
               </tr>
             </thead>
             <tbody>
@@ -211,128 +344,44 @@ export default function CreatorCampaignsPage() {
                   const businessName = campaign.business?.raw_user_meta_data?.company_name || 
                                      campaign.business?.raw_user_meta_data?.full_name || "Premium Brand";
                   return (
-                    <tr key={app.id} className="border-b border-[var(--border-subtle)] hover:bg-[#F5F5F0]/50 transition-colors">
-                      <td className="py-4 px-6">
-                        <div className="font-bold text-[var(--foreground)]">{campaign.title}</div>
-                      </td>
-                      <td className="py-4 px-6 font-medium text-[var(--foreground)]/80">
-                        {businessName}
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${
-                          app.status === 'accepted' ? 'bg-[#10B981]/10 text-[#10B981]' : 
-                          app.status === 'pending' ? 'bg-[#FFB347]/10 text-[#FFB347]' :
-                          'bg-red-500/10 text-red-500'
-                        }`}>
-                          {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-sm font-bold text-[var(--foreground)]">
-                        {campaign.compensation_model === 'performance' ? `${campaign.commission_rate}%` : 
-                         campaign.compensation_model === 'fixed' ? `£${campaign.fixed_fee}` :
-                         `£${campaign.fixed_fee} + ${campaign.commission_rate}%`}
-                         
-                        {app.status === 'accepted' && campaign.compensation_model !== 'fixed' && (
-                          <div className="mt-3">
-                            {generatedLinks[campaign.id] ? (
-                              <div className="flex items-center gap-2 bg-[#F5F5F0] border border-[var(--border-subtle)] px-2 py-1.5 rounded-lg">
-                                <input 
-                                  readOnly 
-                                  value={generatedLinks[campaign.id]} 
-                                  className="bg-transparent border-none outline-none text-xs text-[var(--foreground)] w-full truncate"
-                                />
-                                <button onClick={() => copyToClipboard(generatedLinks[campaign.id])} className="text-[var(--foreground)]/60 hover:text-[#10B981]">
-                                  <Copy size={14} />
-                                </button>
-                              </div>
-                            ) : (
-                              <button 
-                                onClick={() => handleGenerateLink(campaign.id)}
-                                disabled={generatingFor === campaign.id}
-                                className="btn-secondary py-1 px-3 text-xs flex items-center gap-1 w-full justify-center mb-2"
-                              >
-                                {generatingFor === campaign.id ? <Loader2 size={12} className="animate-spin" /> : <LinkIcon size={12} />}
-                                Tracking Link
-                              </button>
-                            )}
-
-                            <div className="relative w-full space-y-2">
-                              {isElectron && (
-                                <button
-                                  onClick={() => handleNativeCompression(campaign.id)}
-                                  disabled={compressing === campaign.id}
-                                  className="btn-primary w-full py-2 px-3 text-xs flex flex-col items-center gap-1 justify-center relative overflow-hidden"
-                                >
-                                  {compressing === campaign.id ? (
-                                    <>
-                                      <div className="flex items-center gap-2 relative z-10">
-                                        <Loader2 size={12} className="animate-spin" />
-                                        Compressing ({compressionProgress}%)
-                                      </div>
-                                      <div 
-                                        className="absolute top-0 left-0 bottom-0 bg-[#0E2F5A]/20 z-0 transition-all duration-300" 
-                                        style={{ width: `${compressionProgress}%` }}
-                                      />
-                                    </>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <HardDrive size={12} />
-                                      Mac Native Compression
-                                    </div>
-                                  )}
-                                </button>
-                              )}
-                              {process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ? (
-                                <CldUploadWidget 
-                                  uploadPreset="ml_default"
-                                onSuccess={(result: any) => handleCloudinarySuccess(result.info, campaign.id)}
-                                options={{
-                                  sources: ['local', 'google_drive', 'dropbox'],
-                                  multiple: false,
-                                  maxFiles: 1,
-                                  clientAllowedFormats: ['video'],
-                                  styles: {
-                                      palette: {
-                                          window: "#FFFFFF",
-                                          windowBorder: "#10B981",
-                                          tabIcon: "#10B981",
-                                          menuIcons: "#10B981",
-                                          textDark: "#000000",
-                                          textLight: "#FFFFFF",
-                                          link: "#10B981",
-                                          action: "#10B981",
-                                          inactiveTabIcon: "#0E2F5A",
-                                          error: "#F44235",
-                                          inProgress: "#10B981",
-                                          complete: "#10B981",
-                                          sourceBg: "#E4EBF1"
-                                      }
-                                  }
-                                }}
-                              >
-                                {({ open }) => (
-                                  <button 
-                                    onClick={() => open()}
-                                    disabled={uploading === campaign.id}
-                                    className="btn-secondary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center border-[var(--border-subtle)] hover:bg-[#10B981]/10 hover:text-[#10B981] hover:border-[#10B981]/30 transition-colors"
-                                  >
-                                    {uploading === campaign.id ? <Loader2 size={12} className="animate-spin" /> : <Upload size={12} />}
-                                    {uploading === campaign.id ? "Processing..." : "Cloud Editor & Upload"}
-                                  </button>
-                                )}
-                              </CldUploadWidget>
-                              ) : (
-                                <button 
-                                  disabled
-                                  className="btn-secondary w-full py-1 px-3 text-xs flex items-center gap-1 justify-center border-[var(--border-subtle)] opacity-50 cursor-not-allowed"
-                                >
-                                  <Upload size={12} />
-                                  Cloudinary Not Configured
-                                </button>
-                              )}
+                    <tr key={app.id} className="border-b border-[var(--border)] hover:bg-[var(--foreground)]/5 transition-colors">
+                      <td colSpan={4} className="p-0">
+                        <div className="w-full flex flex-col py-6 px-6">
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex-1">
+                              <div className="font-heading font-extrabold text-lg text-[var(--foreground)] tracking-tight">{campaign.title}</div>
+                              <div className="font-mono text-xs text-[var(--text-secondary)] mt-1">{businessName}</div>
+                            </div>
+                            <div className="flex-1 text-center">
+                              <span className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs font-bold font-mono tracking-widest uppercase ${
+                                app.status === 'accepted' ? 'bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 
+                                app.status === 'pending' ? 'bg-[var(--accent-tertiary)]/10 text-[var(--accent-tertiary)]' :
+                                'bg-red-500/10 text-red-500'
+                              }`}>
+                                {app.status === 'accepted' ? 'ACTIVE_NODE' : app.status}
+                              </span>
+                            </div>
+                            <div className="flex-1 text-right text-sm font-extrabold text-[var(--foreground)] font-mono">
+                              {campaign.compensation_model === 'performance' ? `${campaign.commission_rate}% RevShare` : 
+                               campaign.compensation_model === 'fixed' ? `£${campaign.fixed_fee} Flat` :
+                               `£${campaign.fixed_fee} + ${campaign.commission_rate}%`}
                             </div>
                           </div>
+                         
+                        {app.status === 'accepted' && campaign.compensation_model !== 'fixed' && (
+                          <CampaignTimeline 
+                            campaign={campaign}
+                            generatedLink={generatedLinks[campaign.id]}
+                            handleGenerateLink={handleGenerateLink}
+                            generatingFor={generatingFor}
+                            handleCloudinarySuccess={handleCloudinarySuccess}
+                            isElectron={isElectron}
+                            handleNativeCompression={handleNativeCompression}
+                            compressing={compressing}
+                            compressionProgress={compressionProgress}
+                          />
                         )}
+                        </div>
                       </td>
                     </tr>
                   );

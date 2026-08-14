@@ -108,11 +108,11 @@ export default function NewCampaignPage() {
       </Link>
 
       <div className="mb-10">
-        <h1 className="text-3xl md:text-4xl font-heading font-extrabold text-[var(--foreground)] tracking-tight">
-          Create New Campaign
+        <h1 className="text-4xl md:text-5xl font-heading font-extrabold text-[var(--foreground)] tracking-tighter">
+          Initialize Campaign
         </h1>
-        <p className="text-[var(--foreground)]/60 mt-2 font-medium">
-          Define your campaign goals, deliverables, and choose how you want to compensate creators.
+        <p className="text-[var(--text-secondary)] mt-2 text-lg">
+          Configure performance parameters and define deliverable requirements for the routing network.
         </p>
       </div>
 
@@ -124,8 +124,8 @@ export default function NewCampaignPage() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Info */}
-        <div className="pixis-card p-8 border border-[var(--border-subtle)] space-y-6">
-          <h2 className="text-xl font-heading font-extrabold text-[var(--foreground)] tracking-tight">Campaign Details</h2>
+        <div className="glass-panel p-8 border border-[var(--border)] space-y-6">
+          <h2 className="text-2xl font-heading font-extrabold text-[var(--foreground)] tracking-tighter">Campaign Configuration</h2>
           
           <div className="space-y-4">
             <div>
@@ -217,8 +217,8 @@ export default function NewCampaignPage() {
         </div>
 
         {/* Compensation Model */}
-        <div className="pixis-card p-8 border border-[var(--border-subtle)] space-y-6">
-          <h2 className="text-xl font-heading font-extrabold text-[var(--foreground)] tracking-tight">Compensation Model</h2>
+        <div className="glass-panel p-8 border border-[var(--border)] space-y-6">
+          <h2 className="text-2xl font-heading font-extrabold text-[var(--foreground)] tracking-tighter">Compensation Matrix</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Performance */}
@@ -303,13 +303,16 @@ export default function NewCampaignPage() {
             )}
             
             {(formData.compensation_model === 'performance' || formData.compensation_model === 'hybrid') && (
-              <div className="fade-in-up md:col-span-2">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-bold text-[var(--foreground)]">Attribution Window: <span className="text-[#10B981]">{formData.cookie_window_days} Days</span></label>
+              <div className="fade-in-up md:col-span-2 mt-6">
+                <div className="flex flex-col items-center justify-center mb-6">
+                  <div className="text-[3rem] font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] leading-none tracking-tighter">
+                    {formData.cookie_window_days}
+                  </div>
+                  <label className="block text-sm font-bold text-[var(--text-secondary)] uppercase tracking-widest mt-2">Attribution Days</label>
                 </div>
-                <p className="text-xs text-[var(--foreground)]/60 mb-4 font-medium">If a customer buys {formData.cookie_window_days} days after clicking the creator's link, they still earn commission.</p>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-bold text-[var(--text-tertiary)]">1 Day</span>
+                
+                <div className="flex items-center gap-6">
+                  <span className="text-xs font-bold text-[var(--text-tertiary)] font-mono">01</span>
                   <input
                     type="range"
                     min="1"
@@ -318,9 +321,9 @@ export default function NewCampaignPage() {
                     name="cookie_window_days"
                     value={formData.cookie_window_days}
                     onChange={handleChange}
-                    className="w-full h-2 bg-[var(--border-subtle)] rounded-lg appearance-none cursor-pointer accent-[#10B981]"
+                    className="neon-slider"
                   />
-                  <span className="text-xs font-bold text-[var(--text-tertiary)]">30 Days</span>
+                  <span className="text-xs font-bold text-[var(--text-tertiary)] font-mono">30</span>
                 </div>
               </div>
             )}

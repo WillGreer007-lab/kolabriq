@@ -59,29 +59,29 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex w-full">
+    <div className={`min-h-screen ${isAdmin ? 'dark' : ''} bg-[var(--background)] flex w-full`}>
       {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex w-64 flex-col bg-white border-r border-[var(--border-subtle)] sticky top-0 h-screen">
+      <aside className="hidden md:flex w-64 flex-col bg-[var(--surface)] border-r border-[var(--border)] sticky top-0 h-screen transition-colors duration-500 backdrop-blur-3xl">
         <div className="h-24 flex items-center px-8 border-b border-[var(--border-subtle)]">
-          <Link href="/" className="font-heading font-extrabold text-2xl tracking-tight text-[var(--foreground)]">
-            Adswish<span className="text-[#10B981]">.</span>
+          <Link href="/" className="font-heading font-extrabold text-2xl tracking-tighter text-[var(--foreground)]">
+            ADSWISH<span className="text-[var(--accent-primary)]">.</span>
           </Link>
         </div>
         
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium transition-all duration-300 text-sm ${
                   isActive 
-                    ? "bg-[#10B981]/10 text-[#10B981]" 
-                    : "text-[var(--foreground)]/70 hover:bg-[var(--background)] hover:text-[var(--foreground)]"
+                    ? "bg-[var(--accent-primary)] text-white shadow-neon" 
+                    : "text-[var(--text-secondary)] hover:bg-[var(--foreground)]/5 hover:text-[var(--foreground)]"
                 }`}
               >
-                <link.icon size={20} className={isActive ? "text-[#10B981]" : ""} />
+                <link.icon size={18} strokeWidth={isActive ? 2 : 1.5} className={isActive ? "text-white" : ""} />
                 {link.name}
               </Link>
             );
@@ -91,9 +91,9 @@ export default function DashboardLayout({
         <div className="p-4 border-t border-[var(--border-subtle)]">
           <button 
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-xl font-medium text-red-500 hover:bg-red-50 transition-all duration-300"
+            className="flex w-full items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm text-[var(--accent-destructive)] hover:bg-[var(--accent-destructive)]/10 transition-all duration-300"
           >
-            <LogOut size={20} />
+            <LogOut size={18} strokeWidth={1.5} />
             Sign Out
           </button>
         </div>
