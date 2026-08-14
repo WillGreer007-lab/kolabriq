@@ -8,16 +8,20 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
-  const [activeDisputeId, setActiveDisputeId] = useState<string | null>(null);
+  const [activeDispute, setActiveDispute] = useState<any>(null);
+  const [financials, setFinancials] = useState({ platformEscrowVolume: 0, revenueCut: 0, totalLocked: 0 });
+  const [disputes, setDisputes] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch("/api/admin/users");
+        const res = await fetch("/api/admin/dashboard");
         const data = await res.json();
         
         if (data.error) throw new Error(data.error);
         setUsers(data.users || []);
+        setFinancials(data.financials || { platformEscrowVolume: 0, revenueCut: 0, totalLocked: 0 });
+        setDisputes(data.disputes || []);
       } catch (err: any) {
         setError(err.message || "Failed to load users");
       } finally {
@@ -66,17 +70,17 @@ export default function AdminDashboardPage() {
                   <h3 className="text-xs font-bold font-mono text-[var(--text-secondary)] uppercase tracking-widest">Platform Escrow Volume</h3>
                 </div>
                 <p className="text-[4rem] leading-none font-heading font-extrabold text-[var(--foreground)] tracking-tighter drop-shadow-[0_0_15px_rgba(74,144,226,0.3)]">
-                  £12,450.00
+                  £{financials.platformEscrowVolume.toLocaleString(undefined, {minimumFractionDigits: 2})}
                 </p>
               </div>
               <div className="flex gap-4 mt-4 md:mt-0">
                 <div className="text-right">
                   <h3 className="text-[10px] font-bold font-mono text-[var(--text-secondary)] uppercase tracking-widest">Revenue Cut (10%)</h3>
-                  <p className="text-xl font-mono font-bold text-[var(--accent-primary)]">£1,245.00</p>
+                  <p className="text-xl font-mono font-bold text-[var(--accent-primary)]">£{financials.revenueCut.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                 </div>
                 <div className="text-right pl-4 border-l border-[var(--border)]">
                   <h3 className="text-[10px] font-bold font-mono text-[var(--text-secondary)] uppercase tracking-widest">Locked</h3>
-                  <p className="text-xl font-mono font-bold text-[var(--accent-tertiary)]">£4,500.00</p>
+                  <p className="text-xl font-mono font-bold text-[var(--accent-tertiary)]">£{financials.totalLocked.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
                 </div>
               </div>
             </div>
@@ -118,27 +122,37 @@ export default function AdminDashboardPage() {
                 <AlertTriangle size={20} strokeWidth={2} className="text-red-500 animate-pulse" />
                 <h2 className="text-xl font-heading font-extrabold text-red-500 tracking-tighter uppercase">SLA Dispute Tribunal</h2>
               </div>
-              <span className="px-3 py-1 bg-red-500 text-white rounded-full text-[10px] font-bold font-mono tracking-widest uppercase animate-pulse">1 Active Case</span>
+              <span className="px-3 py-1 bg-red-500 text-white rounded-full text-[10px] font-bold font-mono tracking-widest uppercase animate-pulse">{disputes.length} Active Cases</span>
             </div>
-            <div className="p-6 bg-red-500/5">
-              <div className="border border-red-500/20 bg-[var(--background)] rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h4 className="font-bold text-red-400 text-sm font-mono uppercase tracking-widest">Breach: Missing Conversion Tracking</h4>
-                  <p className="text-sm text-[var(--text-secondary)] mt-1">Creator <strong className="text-[var(--foreground)]">@AlexRivera</strong> vs Brand <strong className="text-[var(--foreground)]">TechGear</strong></p>
+            <div className="p-6 bg-red-500/5 space-y-4">
+              {disputes.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-red-500/70 font-mono text-sm uppercase tracking-widest">No Active Disputes</p>
                 </div>
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest font-mono">SLA Countdown</span>
-                    <span className="text-3xl font-mono font-bold text-red-500 tracking-tighter drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">14:22:05</span>
+              ) : (
+                disputes.map(dispute => (
+                  <div key={dispute.id} className="border border-red-500/20 bg-[var(--background)] rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h4 className="font-bold text-red-400 text-sm font-mono uppercase tracking-widest">Breach: {dispute.reason}</h4>
+                      <p className="text-sm text-[var(--text-secondary)] mt-1">
+                        Initiator <strong className="text-[var(--foreground)]">@{dispute.initiator?.raw_user_meta_data?.full_name || 'Unknown'}</strong> vs Target <strong className="text-[var(--foreground)]">@{dispute.target?.raw_user_meta_data?.full_name || 'Unknown'}</strong>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-6">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest font-mono">SLA Countdown</span>
+                        <span className="text-3xl font-mono font-bold text-red-500 tracking-tighter drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">14:22:05</span>
+                      </div>
+                      <button 
+                        onClick={() => { setActiveDispute(dispute); setChatOpen(true); }}
+                        className="btn-primary bg-red-500 hover:bg-red-600 shadow-neon-red"
+                      >
+                        Intervene
+                      </button>
+                    </div>
                   </div>
-                  <button 
-                    onClick={() => { setActiveDisputeId('1'); setChatOpen(true); }}
-                    className="btn-primary bg-red-500 hover:bg-red-600 shadow-neon-red"
-                  >
-                    Intervene
-                  </button>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -241,19 +255,23 @@ export default function AdminDashboardPage() {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-[var(--background)]">
-            <div className="flex flex-col gap-1 items-start">
-              <span className="text-[10px] font-mono text-[var(--text-tertiary)] uppercase tracking-widest ml-2">@AlexRivera (Creator)</span>
-              <div className="glass-panel p-4 border-[var(--border)] rounded-2xl rounded-tl-sm max-w-[85%]">
-                <p className="text-sm text-[var(--foreground)] font-mono">I've verified the tracking pixel on my end. It's firing correctly. The issue is on TechGear's Shopify integration.</p>
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-1 items-end">
-              <span className="text-[10px] font-mono text-[var(--text-tertiary)] uppercase tracking-widest mr-2">TechGear (Brand)</span>
-              <div className="glass-panel p-4 border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-[0_0_15px_rgba(16,185,129,0.05)]">
-                <p className="text-sm text-[var(--foreground)] font-mono">Our developers are looking into it, but we can't release funds until we see the dashboard update.</p>
-              </div>
-            </div>
+            {activeDispute && (
+              <>
+                <div className="flex flex-col gap-1 items-start">
+                  <span className="text-[10px] font-mono text-[var(--text-tertiary)] uppercase tracking-widest ml-2">@{activeDispute.initiator?.raw_user_meta_data?.full_name} (Initiator)</span>
+                  <div className="glass-panel p-4 border-[var(--border)] rounded-2xl rounded-tl-sm max-w-[85%]">
+                    <p className="text-sm text-[var(--foreground)] font-mono">I've initiated this dispute because: {activeDispute.reason}</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-1 items-end">
+                  <span className="text-[10px] font-mono text-[var(--text-tertiary)] uppercase tracking-widest mr-2">@{activeDispute.target?.raw_user_meta_data?.full_name} (Target)</span>
+                  <div className="glass-panel p-4 border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+                    <p className="text-sm text-[var(--foreground)] font-mono">Pending response to tribunal.</p>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex justify-center my-6 relative">
               <div className="absolute inset-0 flex items-center">

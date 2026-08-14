@@ -11,20 +11,15 @@ export default async function BusinessDashboard() {
     redirect("/auth/login");
   }
 
-  // Fetch business profile for pixel status
-  const { data: businessProfile } = await supabase
-    .from("business_profiles")
-    .select("pixel_status")
-    .eq("id", user.id)
-    .single();
-
-  const isPixelOffline = businessProfile?.pixel_status === "offline";
-
   // Fetch campaigns for this business
   const { data: myCampaigns } = await supabase
     .from("campaigns")
-    .select("id")
+    .select("id, pixel_status")
     .eq("business_id", user.id);
+
+  const isPixelOffline = myCampaigns?.some(c => c.pixel_status === "offline") || false;
+
+
 
   let totalSpend = 0;
   let totalConversions = 0;

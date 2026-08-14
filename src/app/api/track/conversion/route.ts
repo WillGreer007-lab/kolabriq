@@ -1,91 +1,110 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
 
 export async function POST(request: Request) {
   try {
-    const { orderId, saleAmount } = await request.json();
+    const { token, businessId, orderId, amount, currency } = await request.json();
 
-    if (!orderId || !saleAmount) {
-      return NextResponse.json({ error: "Missing required fields: orderId, saleAmount" }, { status: 400 });
+    if (!token || !businessId || !amount) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Get the first-party tracking cookie
-    const cookieStore = await cookies();
-    const shortCode = cookieStore.get("adswish_ref")?.value;
-
-    if (!shortCode) {
-      return NextResponse.json({ message: "No tracking cookie found, skipping attribution" });
+    // 1. Verify JWT Signature
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback_secret_do_not_use");
+    let payload;
+    try {
+      const { payload: jwtPayload } = await jwtVerify(token, secret);
+      payload = jwtPayload;
+    } catch (err) {
+      console.error("JWT Verification failed:", err);
+      return NextResponse.json({ error: "Invalid or expired tracking token" }, { status: 401 });
     }
 
-    // Use admin client for conversions since this might be called server-to-server or anonymously
+    const { campaign_id, creator_id } = payload as any;
+
     const supabaseAdmin = createSupabaseAdmin(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Find the associated link and campaign
-    const { data: link, error: linkError } = await supabaseAdmin
-      .from("campaign_links")
-      .select("id, creator_id, campaign_id, campaigns(commission_percentage)")
-      .eq("short_code", shortCode)
-      .single();
-
-    if (linkError || !link) {
-      return NextResponse.json({ error: "Invalid tracking code" }, { status: 400 });
-    }
-
-    // Calculate commission
-    const commissionPercentage = Array.isArray(link.campaigns) 
-      ? link.campaigns[0]?.commission_percentage 
-      : (link.campaigns as any)?.commission_percentage;
-      
-    if (!commissionPercentage) {
-      return NextResponse.json({ error: "Campaign does not have a performance commission set" }, { status: 400 });
-    }
-
-    const commissionAmount = (Number(saleAmount) * (Number(commissionPercentage) / 100)).toFixed(2);
-
-    // 1. Log the conversion
-    const { data: conversion, error: conversionError } = await supabaseAdmin
+    // 2. Prevent Duplicate Conversions
+    const { data: existing } = await supabaseAdmin
       .from("conversions")
-      .insert([{
-        campaign_id: link.campaign_id,
-        creator_id: link.creator_id,
-        order_id: orderId,
-        amount: Number(saleAmount),
-        currency: 'gbp',
-        status: 'pending'
-      }])
-      .select()
+      .select("id")
+      .eq("order_id", orderId)
       .single();
 
-    // If conversion error is a duplicate order_id, it means we already tracked it.
-    if (conversionError) {
-      console.error("Conversion tracking error:", conversionError);
-      return NextResponse.json({ error: "Failed to log conversion or already logged" }, { status: 400 });
+    if (existing) {
+      return NextResponse.json({ success: true, message: "Already tracked" });
     }
 
-    await supabaseAdmin
-      .from("ledger_entries")
-      .insert([{
-        campaign_id: link.campaign_id,
-        creator_id: link.creator_id,
-        amount_total: Number(saleAmount),
-        amount_creator: Number(commissionAmount),
-        amount_platform: Number(commissionAmount) * 0.1, // Platform takes 10% of commission
-        currency: 'gbp',
-        status: 'pending' // Pending until business pays invoice
+    // 3. Get Campaign Commission Rate
+    const { data: campaign } = await supabaseAdmin
+      .from("campaigns")
+      .select("commission_rate, compensation_model")
+      .eq("id", campaign_id)
+      .single();
+
+    if (!campaign) {
+      return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+    }
+
+    // 4. Calculate Earnings (90% Creator, 10% Platform)
+    let totalCommission = 0;
+    if (campaign.compensation_model === 'performance' || campaign.compensation_model === 'hybrid') {
+      const rate = campaign.commission_rate || 0;
+      totalCommission = (amount * rate) / 100;
+    }
+
+    const platformFee = totalCommission * 0.10;
+    const creatorEarning = totalCommission - platformFee;
+
+    // 5. Insert Conversion Record
+    const { data: conversion, error: conversionError } = await supabaseAdmin.from("conversions").insert([{
+      campaign_id,
+      creator_id,
+      order_id: orderId,
+      amount,
+      commission_earned: creatorEarning,
+      platform_fee: platformFee,
+      currency
+    }]).select("id").single();
+
+    if (conversionError) throw conversionError;
+
+    // 6. Create Escrow Hold (7-day holding period)
+    if (creatorEarning > 0) {
+      const releaseDate = new Date();
+      releaseDate.setDate(releaseDate.getDate() + 7); // 7 day hold
+
+      await supabaseAdmin.from("escrow_holds").insert([{
+        campaign_id,
+        creator_id,
+        business_id: businessId,
+        amount: creatorEarning,
+        currency,
+        hold_reason: 'affiliate_conversion',
+        status: 'pending',
+        release_date: releaseDate.toISOString()
       }]);
+      
+      // Update ledger
+      await supabaseAdmin.from("ledger_entries").insert([{
+        campaign_id,
+        creator_id,
+        amount_total: creatorEarning,
+        amount_fee: platformFee,
+        amount_net: creatorEarning,
+        currency,
+        status: 'pending_escrow',
+        transaction_type: 'affiliate'
+      }]);
+    }
 
-    return NextResponse.json({ 
-      success: true, 
-      commissionAmount,
-      message: "Conversion successfully attributed to creator" 
-    });
-
-  } catch (error: any) {
-    console.error("Conversion Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true, escrowed: creatorEarning > 0 });
+  } catch (err: any) {
+    console.error("Conversion Track Error:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

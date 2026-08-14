@@ -3,9 +3,9 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function ValueProp() {
   return (
-    <section className="section bg-[var(--background)]" id="how-it-works">
+    <section className="section py-24 md:py-32 bg-[var(--background)]" id="how-it-works">
       <div className="container-custom">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
           
           {/* Left Side - Visual */}
           <div className="relative w-full fade-in-up">
@@ -60,27 +60,27 @@ export default function ValueProp() {
           </div>
 
           {/* Right Side - Content */}
-          <div className="flex flex-col gap-8 fade-in-up delay-100">
+          <div className="flex flex-col gap-12 lg:gap-16 fade-in-up delay-100">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-extrabold text-[var(--foreground)] leading-none tracking-tight">
               Stop guessing. Start tracking <span className="text-[#10B981]">ROI</span>.
             </h2>
             
             <p className="text-xl text-[var(--foreground)]/70 font-medium leading-relaxed">
-              The days of paying flat fees for vanity metrics are over. Adswish empowers you to build campaigns based on actual performance and conversions.
+              The days of paying flat fees for vanity metrics are over. AdSwish empowers you to build campaigns based on actual performance and conversions.
             </p>
 
-            <ul className="space-y-6 mt-4">
+            <ul className="space-y-10 mt-6">
               {[
                 "Unique tracking links automatically generated for every creator",
                 "Real-time dashboards showing clicks, conversions, and sales",
                 "Automated commission payouts when milestones are hit",
                 "Detailed analytics on which niches and creators perform best"
               ].map((item, index) => (
-                <li key={index} className="flex items-start gap-4">
-                  <div className="w-6 h-6 rounded-full bg-[#10B981]/20 text-[#10B981] flex items-center justify-center shrink-0 mt-1">
-                    <CheckCircle2 size={16} />
+                <li key={index} className="flex items-start gap-6">
+                  <div className="w-8 h-8 rounded-full bg-[#10B981]/20 text-[#10B981] flex items-center justify-center shrink-0 mt-1">
+                    <CheckCircle2 size={20} />
                   </div>
-                  <span className="text-[var(--foreground)] font-medium text-lg leading-snug">{item}</span>
+                  <span className="text-[var(--foreground)] font-medium text-xl leading-snug">{item}</span>
                 </li>
               ))}
             </ul>

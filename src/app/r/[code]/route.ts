@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { SignJWT } from "jose";
 
 export async function GET(
   request: Request,
@@ -30,7 +30,7 @@ export async function GET(
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // Log the click asynchronously (don't block redirect)
+    // Log the click asynchronously
     const ipHash = request.headers.get("x-forwarded-for") || "unknown";
     const userAgent = request.headers.get("user-agent") || "unknown";
 
@@ -52,24 +52,28 @@ export async function GET(
         
     const finalDestination = targetUrl || request.url;
 
-    // Create a response that redirects
-    const response = NextResponse.redirect(finalDestination);
-
     // Determine cookie duration based on campaign settings (default 30 days)
     const cookieWindowDays = Array.isArray(link.campaigns)
         ? (link.campaigns[0]?.cookie_window_days || 30)
         : ((link.campaigns as any)?.cookie_window_days || 30);
 
-    // Set first-party cookie for the specified duration
-    const cookieStore = await cookies();
-    response.cookies.set('adswish_ref', code, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: cookieWindowDays * 24 * 60 * 60
-    });
+    // Generate JWT Edge Token
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback_secret_do_not_use");
+    const jwt = await new SignJWT({ 
+      campaign_id: link.campaign_id, 
+      creator_id: link.creator_id,
+      window_days: cookieWindowDays
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(`${cookieWindowDays}d`) // Token expires when cookie should expire
+      .sign(secret);
 
-    return response;
+    // Append JWT to the target URL
+    const destinationUrl = new URL(finalDestination);
+    destinationUrl.searchParams.set("adswish_ref", jwt);
+
+    return NextResponse.redirect(destinationUrl);
   } catch (error: any) {
     console.error("Redirect Error:", error);
     return NextResponse.redirect(new URL('/', request.url));

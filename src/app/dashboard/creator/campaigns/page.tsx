@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Briefcase, Loader2, Megaphone, Plus, Link as LinkIcon, Copy, Sparkles, X, Upload, HardDrive, FileVideo } from "lucide-react";
 import Link from "next/link";
 import { CldUploadWidget } from 'next-cloudinary';
-import { Lock, Unlock } from 'lucide-react';
+import { Lock, Unlock, Star, CheckCircle } from 'lucide-react';
+import { ReviewModal } from '@/components/ui/ReviewModal';
 
 const CampaignTimeline = ({ campaign, generatedLink, handleGenerateLink, generatingFor, handleCloudinarySuccess, isElectron, handleNativeCompression, compressing, compressionProgress }: any) => {
   const supabase = createClient();
@@ -141,6 +142,16 @@ export default function CreatorCampaignsPage() {
   const [compressing, setCompressing] = useState<string | null>(null);
   const [compressionProgress, setCompressionProgress] = useState<number>(0);
 
+  // Review State
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedCampaignForReview, setSelectedCampaignForReview] = useState<{ id: string, businessId: string, businessName: string } | null>(null);
+
+  // Dispute State
+  const [disputeModalOpen, setDisputeModalOpen] = useState(false);
+  const [selectedCampaignForDispute, setSelectedCampaignForDispute] = useState<{ id: string, targetId: string, targetName: string } | null>(null);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [submittingDispute, setSubmittingDispute] = useState(false);
+
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).electronAPI) {
       setIsElectron(true);
@@ -233,6 +244,33 @@ export default function CreatorCampaignsPage() {
       alert(err.message || "Failed to save video URL");
     } finally {
       setUploading(null);
+    }
+  };
+
+  const submitDispute = async () => {
+    if (!selectedCampaignForDispute || !disputeReason) return;
+    setSubmittingDispute(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { error } = await supabase.from('disputes').insert([{
+        campaign_id: selectedCampaignForDispute.id,
+        initiator_id: user.id,
+        target_id: selectedCampaignForDispute.targetId,
+        reason: disputeReason,
+        status: 'open'
+      }]);
+      
+      if (error) throw error;
+      alert("Dispute triggered and escalated to Superadmin.");
+      setDisputeModalOpen(false);
+      setDisputeReason("");
+    } catch (e: any) {
+      alert("Error: " + e.message);
+    } finally {
+      setSubmittingDispute(false);
     }
   };
 
@@ -361,10 +399,42 @@ export default function CreatorCampaignsPage() {
                                 {app.status === 'accepted' ? 'ACTIVE_NODE' : app.status}
                               </span>
                             </div>
-                            <div className="flex-1 text-right text-sm font-extrabold text-[var(--foreground)] font-mono">
+                            <div className="flex-1 text-right text-sm font-extrabold text-[var(--foreground)] font-mono flex flex-col items-end gap-2">
                               {campaign.compensation_model === 'performance' ? `${campaign.commission_rate}% RevShare` : 
                                campaign.compensation_model === 'fixed' ? `£${campaign.fixed_fee} Flat` :
                                `£${campaign.fixed_fee} + ${campaign.commission_rate}%`}
+                               
+                               {campaign.status === 'completed' && (
+                                 <button
+                                   onClick={() => {
+                                     setSelectedCampaignForReview({
+                                       id: campaign.id,
+                                       businessId: campaign.business_id,
+                                       businessName
+                                     });
+                                     setReviewModalOpen(true);
+                                   }}
+                                   className="text-xs flex items-center gap-1 font-bold text-[#F5A623] bg-[#F5A623]/10 px-2 py-1 rounded-md hover:bg-[#F5A623]/20 transition-colors"
+                                 >
+                                   <Star size={14} className="fill-[#F5A623]" /> Rate Brand
+                                 </button>
+                               )}
+
+                               {app.status === 'accepted' && campaign.status === 'active' && (
+                                 <button
+                                   onClick={() => {
+                                     setSelectedCampaignForDispute({
+                                       id: campaign.id,
+                                       targetId: campaign.business_id,
+                                       targetName: businessName
+                                     });
+                                     setDisputeModalOpen(true);
+                                   }}
+                                   className="text-[10px] font-mono uppercase tracking-widest text-red-500 hover:text-red-400 transition-colors mt-2"
+                                 >
+                                   Trigger SLA Dispute
+                                 </button>
+                               )}
                             </div>
                           </div>
                          
@@ -391,6 +461,51 @@ export default function CreatorCampaignsPage() {
           </table>
         </div>
       </div>
+
+      {selectedCampaignForReview && (
+        <ReviewModal
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          campaignId={selectedCampaignForReview.id}
+          revieweeId={selectedCampaignForReview.businessId}
+          revieweeName={selectedCampaignForReview.businessName}
+          onSuccess={() => {
+            alert("Review submitted successfully!");
+            // Optionally refetch applications or just close
+          }}
+        />
+      )}
+
+      {disputeModalOpen && selectedCampaignForDispute && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="glass-panel-danger border border-red-500/30 w-full max-w-md p-8 relative shadow-neon-red">
+            <button onClick={() => setDisputeModalOpen(false)} className="absolute top-4 right-4 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
+              <X size={24} />
+            </button>
+            <h2 className="text-2xl font-heading font-extrabold text-red-500 mb-2 uppercase tracking-tighter">Initiate SLA Dispute</h2>
+            <p className="text-sm text-red-500/70 mb-6 font-mono">WARNING: Frivolous disputes will result in a strike against your profile. Only proceed if {selectedCampaignForDispute.targetName} has violated the SLA terms.</p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold font-mono text-[var(--foreground)] uppercase tracking-widest mb-2 block">Reason for Dispute</label>
+                <textarea 
+                  value={disputeReason}
+                  onChange={e => setDisputeReason(e.target.value)}
+                  className="w-full bg-[var(--background)] border border-red-500/30 rounded-xl px-4 py-3 text-sm font-mono text-[var(--foreground)] focus:border-red-500 outline-none resize-none"
+                  rows={4}
+                  placeholder="e.g. Escrow not released, pixel tracking removed..."
+                />
+              </div>
+              <button 
+                onClick={submitDispute}
+                disabled={submittingDispute || !disputeReason}
+                className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl shadow-neon-red transition-all flex justify-center"
+              >
+                {submittingDispute ? <Loader2 className="animate-spin" /> : "Escalate to Superadmin"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
