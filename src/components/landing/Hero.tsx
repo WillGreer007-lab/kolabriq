@@ -25,6 +25,13 @@ export default function Hero() {
           <p className="mt-8 text-xl md:text-2xl text-[var(--foreground)]/70 max-w-2xl mx-auto font-medium tracking-tight text-center">
             A complete performance-based marketplace connecting premium consumer brands with high-converting creators.
           </p>
+
+          <div className="mt-10 flex items-center justify-center gap-4">
+            <Link href="#download-desktop" onClick={(e) => { e.preventDefault(); alert('To compile the native app, run: npm run build:desktop'); }} className="btn-neon flex items-center gap-2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Download Desktop App (Mac)
+            </Link>
+          </div>
         </div>
 
         {/* Carousel of Cards (Pixis Product Style) */}
