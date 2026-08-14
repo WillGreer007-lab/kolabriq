@@ -78,7 +78,7 @@ export default function CampaignMarketplace() {
     fetchCampaigns();
   }, []);
 
-  const handleApply = async (campaignId: string) => {
+  const handleApply = async (campaignId: string, businessId: string) => {
     setApplyingId(campaignId);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -89,6 +89,13 @@ export default function CampaignMarketplace() {
         creator_id: user.id,
         status: "pending"
       });
+
+      // Create conversation for negotiation right away
+      await supabase.from("conversations").insert({
+        campaign_id: campaignId,
+        business_id: businessId,
+        creator_id: user.id
+      }).select().single();
 
       if (!error) {
         setAppliedIds(prev => new Set([...prev, campaignId]));
@@ -221,7 +228,7 @@ export default function CampaignMarketplace() {
                   </div>
 
                   <button 
-                    onClick={() => handleApply(campaign.id)}
+                    onClick={() => handleApply(campaign.id, campaign.business_id)}
                     disabled={hasApplied || isApplying}
                     className={`w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors ${
                       hasApplied 
